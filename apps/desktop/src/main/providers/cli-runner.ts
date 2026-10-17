@@ -15,6 +15,8 @@ export interface CliRunResult {
 
 export interface CliRunOptions {
   env?: Record<string, string>;
+  /** Remove inherited overrides entirely: some CLIs treat an empty value as a real setting. */
+  unsetEnv?: readonly string[];
   timeoutMs?: number;
   cwd?: string;
 }
@@ -122,7 +124,10 @@ export class ExecaCliRunner implements CliRunner {
         missing: true,
       };
     const env: Record<string, string> = {};
-    for (const [k, v] of Object.entries(this.env)) if (v !== undefined && !STRIPPED_ENV.has(k)) env[k] = v;
+    const envKey = (key: string) => (this.platform === 'win32' ? key.toUpperCase() : key);
+    const excluded = new Set([...STRIPPED_ENV, ...(opts.unsetEnv ?? [])].map(envKey));
+    for (const [k, v] of Object.entries(this.env))
+      if (v !== undefined && !excluded.has(envKey(k))) env[k] = v;
     Object.assign(env, QUIET_ENV, { PATH: await this.loginPath() }, opts.env ?? {});
     const r = await execa(file, args, {
       reject: false,

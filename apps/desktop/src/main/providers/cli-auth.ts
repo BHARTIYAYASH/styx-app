@@ -36,7 +36,7 @@ export class CliAuthError extends Error {
 
 export async function readCliEntry(
   vault: CredentialVault,
-  target: TargetInfo,
+  target: Pick<TargetInfo, 'credentialRef'>,
 ): Promise<CliVaultEntry | null> {
   if (!isCliRef(target.credentialRef) || !target.credentialRef) return null;
   const raw = await vault.get(target.credentialRef);
