@@ -880,7 +880,7 @@ test('sim: home-settings', async () => {
             repro:
               'Project nav › Agent defaults → set Permission mode / Styx tasks / Effort → open <repo>/.styx/project.json',
             expected:
-              'the page header says ".styx/project.json · committed · secrets excluded" and the file schema has agents.permissionMode / taskPermissionMode / effort, so the values travel with the repo',
+              `the page header says "${copy.settings.footer.file} · ${copy.settings.footer.note}" and the file schema has agents.permissionMode / taskPermissionMode / effort, so the values travel with the repo`,
             observed: `stored in SQLite only (snapshot shows source "project"); the file\'s agents block has no ${missing.join(' / ')} key`,
             where:
               'apps/desktop/src/main/services/project-service.ts applySettingsToFile writes agents.default/model/autoApproveEdits/mayRequestTargets/notifyWhenNeedsMe only; packages/core/src/project-file.ts projectFileAgentsSchema and mergeSettings read the three keys',
