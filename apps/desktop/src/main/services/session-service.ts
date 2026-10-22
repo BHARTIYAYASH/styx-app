@@ -49,7 +49,7 @@ import {
   type AgentLaunch,
   type AgentLaunchContext,
 } from '../agents';
-import { styxMcpServer } from '../agents/types';
+import { styxMcpServer, styxMcpServerInherit } from '../agents/types';
 import type { Clock } from '../clock';
 import type { Repos } from '../db/repos';
 import { fail } from '../ipc/bus';
@@ -82,7 +82,7 @@ export const STREAM_FLUSH_MS = 33;
 export const STREAM_ACTIVITY_MS = 1000;
 
 /** Hook payloads (`styx hook <agent>` → broker `hook`) are untyped JSON from the CLI. */
-export type HookAgent = 'claude' | 'codex' | 'gemini' | 'cursor' | 'opencode' | 'shell';
+export type HookAgent = 'claude' | 'codex' | 'gemini' | 'cursor' | 'opencode' | 'goose' | 'shell';
 
 export interface SessionServiceDeps {
   repos: Repos;
@@ -347,7 +347,8 @@ export function runnerFor(agent: Agent, cli: Pick<CliInstall, 'capabilities'> | 
   // Codex: its JSON-RPC app-server (docs/research/agent-parity.md); older builds without it stay on the TUI.
   if (agent === 'codex' && caps['appServer'] === true) return 'stream';
   // Gemini, Cursor and OpenCode: the Agent Client Protocol; Cursor's print mode is the fallback (no approvals there).
-  if ((agent === 'gemini' || agent === 'opencode') && caps['acp'] === true) return 'stream';
+  if ((agent === 'gemini' || agent === 'opencode' || agent === 'goose') && caps['acp'] === true)
+    return 'stream';
   if (
     agent === 'cursor' &&
     (caps['acp'] === true || (caps['streamJson'] === true && caps['printMode'] === true))
@@ -739,7 +740,9 @@ export class SessionService {
             autoApproveEdits: session.toggles.autoApproveEdits,
             resumeSessionId: session.cliSessionId,
             projectPath: project.path,
-            mcp: styxMcpServer(ctx),
+            // Goose persists MCP extension settings in its session database. Its child inherits STYX_* from
+            // the agent process, so the broker token must not also travel in the stored extension env.
+            mcp: session.agent === 'goose' ? { ...styxMcpServerInherit(ctx), env: {} } : styxMcpServer(ctx),
           },
         });
         pid = r.pid;
@@ -1427,7 +1430,7 @@ export class SessionService {
   async refreshClis(): Promise<CliInstall[]> {
     const { repos, publisher } = this.deps;
     const overrides: Partial<Record<Exclude<Agent, 'shell'>, string>> = {};
-    for (const agent of ['claude', 'codex', 'gemini', 'cursor', 'opencode'] as const) {
+    for (const agent of ['claude', 'codex', 'gemini', 'cursor', 'opencode', 'goose'] as const) {
       const picked = repos.settings.kv.get<string>(cliBinaryKey(agent));
       if (picked === undefined) continue;
       if (existsSync(picked)) overrides[agent] = picked;

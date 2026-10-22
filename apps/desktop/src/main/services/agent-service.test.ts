@@ -108,6 +108,31 @@ const row = (app: ReturnType<typeof setup>['app'], agent: Agent): CliInstall => 
   return r;
 };
 
+describe('AgentService: Goose', () => {
+  it('keeps auth unverified without running a paid provider check or reading credentials', async () => {
+    const t = setup();
+    t.app.repos.discovery.saveCli({
+      ...row(t.app, 'claude'),
+      agent: 'goose',
+      binary: '/bin/goose',
+      found: true,
+    });
+    expect(await t.agents.verify('goose')).toMatchObject({
+      authState: 'unknown',
+      account: null,
+      verifyError: null,
+    });
+    expect(t.exec).not.toHaveBeenCalled();
+    const login = await t.agents.login('goose');
+    expect(login.command).toBe('goose configure');
+    expect(t.pty.spawned.at(-1)?.args).toEqual(['configure']);
+    await t.agents.installGuide('goose');
+    expect(t.openExternal).toHaveBeenCalledWith(
+      'https://block.github.io/goose/docs/getting-started/installation/',
+    );
+  });
+});
+
 describe('AgentService.verify', () => {
   const cases: {
     name: string;

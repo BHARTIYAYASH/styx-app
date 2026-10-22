@@ -1,7 +1,7 @@
 # Adding an agent CLI
 
 An agent in Styx is a coding-agent command-line tool that Styx finds on your computer and runs for you: Claude
-Code, Codex, Gemini CLI, Cursor agent, OpenCode, or a plain shell. Styx does not ship its own model. It starts the CLI you
+Code, Codex, Gemini CLI, Cursor agent, OpenCode, Goose, or a plain shell. Styx does not ship its own model. It starts the CLI you
 already have and are signed in to, inside a git worktree of the project, with Styx's MCP server and command shims
 wired in. When you add one, users can pick it in the Spawn agent modal and on the Tasks board. Its chat shows in
 the workspace, its permission prompts become Allow / Deny cards, and every attempt it makes to reach a deploy target

@@ -612,6 +612,14 @@ export const copy = {
         dontAsk: 'Cursor has no such mode: runs as Agent and still asks you here.',
         auto: 'Cursor has no reviewer: runs as Agent and still asks you here.',
       },
+      goose: {
+        default: 'Goose approval mode: tool calls ask you here.',
+        acceptEdits: 'Goose has no edit-only mode: tool calls still ask you here.',
+        plan: 'Goose chat mode: no tool calls, including reads.',
+        bypassPermissions: 'Goose automatic mode: nothing asks. Only for sandboxes you trust.',
+        dontAsk: 'Goose chat mode: all tool calls are refused instead of asking.',
+        auto: 'Goose has no reviewer: tool calls still ask you here.',
+      },
       opencode: {
         default: 'Edits, commands and web fetches ask you here.',
         acceptEdits: 'Edits run without asking; commands and web fetches still ask.',
@@ -1892,6 +1900,7 @@ Reply in chat. Don't write a file, open a PR, or produce a plan document. Use ex
     gemini: 'Gemini',
     cursor: 'Cursor',
     opencode: 'OpenCode',
+    goose: 'Goose',
     shell: 'shell',
   },
   /** Where a detected CLI binary lives (Settings › Agents & CLIs, onboarding step 3). */
@@ -1913,6 +1922,7 @@ Reply in chat. Don't write a file, open a PR, or produce a plan document. Use ex
     gemini: 'Gemini CLI',
     cursor: 'Cursor agent',
     opencode: 'OpenCode',
+    goose: 'Goose',
     shell: 'Shell',
   },
   providers: {

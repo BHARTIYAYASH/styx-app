@@ -1,0 +1,177 @@
+#!/usr/bin/env node
+'use strict';
+// Scripted Goose 1.55.0 ACP peer. Tests never start a real model or use real credentials.
+const args = process.argv.slice(2);
+if (args.includes('--version')) {
+  process.stdout.write('1.55.0\n');
+  process.exit(0);
+}
+if (args.includes('--help')) {
+  process.stdout.write('Commands:\n  acp Run goose as an ACP agent server on stdio\n  session Start an interactive session\n  configure Configure providers\n');
+  process.exit(0);
+}
+if (args[0] === 'configure') process.exit(0);
+if (args[0] !== 'acp' || !args.includes('developer')) process.exit(2);
+let styxMcp = false;
+const SESSION = 'sess_fake';
+const MODES = [
+  { id: 'auto', name: 'auto' },
+  { id: 'approve', name: 'approve' },
+  { id: 'smart_approve', name: 'smart_approve' },
+  { id: 'chat', name: 'chat' },
+];
+let currentModeId = process.env.GOOSE_MODE || 'auto';
+let nextRequestId = 100;
+let turns = 0;
+let cancelled = false;
+/** Answers Styx owes the agent, by request id. */
+const answers = new Map();
+
+const write = (m) => process.stdout.write(`${JSON.stringify({ jsonrpc: '2.0', ...m })}\n`);
+const respond = (id, result) => write({ id, result });
+const error = (id, code, message) => write({ id, error: { code, message } });
+const update = (u) => write({ method: 'session/update', params: { sessionId: SESSION, update: u } });
+const ask = (method, params) =>
+  new Promise((resolve) => {
+    const id = nextRequestId++;
+    answers.set(id, resolve);
+    write({ id, method, params });
+  });
+const tick = () => new Promise((r) => setTimeout(r, 15));
+
+async function prompt(msg) {
+  cancelled = false;
+  if (currentModeId === 'chat') {
+    update({ sessionUpdate: 'agent_message_chunk', content: { type: 'text', text: 'Chat only: no tools.' } });
+    return respond(msg.id, { stopReason: 'end_turn' });
+  }
+  const text = (msg.params.prompt || []).map((b) => (b.type === 'text' ? b.text : '')).join('');
+  update({ sessionUpdate: 'agent_message_chunk', content: { type: 'text', text: 'po' } });
+  await tick();
+  update({ sessionUpdate: 'agent_message_chunk', content: { type: 'text', text: `ng (styx tools: ${styxMcp ? 'yes' : 'no'})` } });
+  await tick();
+  if (cancelled) return respond(msg.id, { stopReason: 'cancelled' });
+  if (/^\/help/.test(text)) {
+    update({ sessionUpdate: 'agent_message_chunk', content: { type: 'text', text: '\n\nCommands: /help /memory' } });
+    return respond(msg.id, { stopReason: 'end_turn' });
+  }
+  turns += 1;
+  const toolCallId = `call_echo_${turns}`;
+  update({
+    sessionUpdate: 'tool_call',
+    toolCallId,
+    title: 'echo pong',
+    kind: 'execute',
+    status: 'pending',
+    rawInput: { command: 'echo pong' },
+  });
+  const decision =
+    currentModeId === 'auto'
+      ? { outcome: { outcome: 'selected', optionId: 'proceed_once' } }
+      : await ask('session/request_permission', {
+          sessionId: SESSION,
+          toolCall: { toolCallId, title: 'echo pong', kind: 'execute', rawInput: { command: 'echo pong' } },
+          options: [
+            { optionId: 'proceed_once', name: 'Allow', kind: 'allow_once' },
+            { optionId: 'proceed_always', name: 'Allow for this session', kind: 'allow_always' },
+            { optionId: 'cancel', name: 'Reject', kind: 'reject_once' },
+          ],
+        });
+  const allowed = decision && decision.outcome && String(decision.outcome.optionId || '').startsWith('proceed');
+  if (cancelled) {
+    update({ sessionUpdate: 'tool_call_update', toolCallId, status: 'failed' });
+    return respond(msg.id, { stopReason: 'cancelled' });
+  }
+  if (!allowed) {
+    update({
+      sessionUpdate: 'tool_call_update',
+      toolCallId,
+      status: 'failed',
+      content: [{ type: 'content', content: { type: 'text', text: 'rejected by the user' } }],
+    });
+    update({ sessionUpdate: 'agent_message_chunk', content: { type: 'text', text: '\n\nSkipped the command.' } });
+    return respond(msg.id, { stopReason: 'end_turn' });
+  }
+  update({ sessionUpdate: 'tool_call_update', toolCallId, status: 'in_progress' });
+  await tick();
+  update({
+    sessionUpdate: 'tool_call_update',
+    toolCallId,
+    status: 'completed',
+    content: [{ type: 'content', content: { type: 'text', text: 'pong\n' } }],
+  });
+  update({ sessionUpdate: 'agent_message_chunk', content: { type: 'text', text: '\n\nDone: the command printed pong.' } });
+  respond(msg.id, { stopReason: 'end_turn' });
+}
+
+function handle(msg) {
+  if (msg.method === undefined && msg.id !== undefined) {
+    const resolve = answers.get(msg.id);
+    if (resolve) {
+      answers.delete(msg.id);
+      resolve(msg.error ? null : msg.result);
+    }
+    return;
+  }
+  switch (msg.method) {
+    case 'initialize':
+      return respond(msg.id, {
+        protocolVersion: 1,
+        agentCapabilities: {
+          loadSession: true,
+          promptCapabilities: { image: false, audio: false, embeddedContext: true },
+          mcpCapabilities: { http: false, sse: false },
+        },
+        agentInfo: { name: 'fake-goose', version: '1.55.0' },
+        authMethods: [],
+      });
+    case 'session/new':
+    case 'session/load': {
+      const styx = (msg.params.mcpServers || []).find((s) => s.name === 'styx');
+      styxMcp = !!styx && Array.isArray(styx.env) && styx.env.length === 0;
+      if (!styxMcp) return error(msg.id, -32602, 'Styx MCP must inherit the broker environment');
+      const result = { modes: { currentModeId, availableModes: MODES } };
+      respond(msg.id, msg.method === 'session/new' ? { sessionId: SESSION, ...result } : result);
+      update({
+        sessionUpdate: 'available_commands_update',
+        availableCommands: [
+          { name: 'help', description: 'Show help' },
+          { name: 'memory', description: 'Manage memory' },
+        ],
+      });
+      return;
+    }
+    case 'session/set_mode':
+      if (!MODES.some((m) => m.id === msg.params.modeId)) return error(msg.id, -32602, 'unknown mode');
+      currentModeId = msg.params.modeId;
+      respond(msg.id, {});
+      return update({ sessionUpdate: 'current_mode_update', currentModeId });
+    case 'session/prompt':
+      return void prompt(msg);
+    case 'session/cancel':
+      cancelled = true;
+      return;
+    default:
+      if (msg.id !== undefined) error(msg.id, -32601, 'Method not found');
+  }
+}
+
+let buffer = '';
+process.stdin.setEncoding('utf8');
+process.stdin.on('data', (chunk) => {
+  buffer += chunk;
+  let nl = buffer.indexOf('\n');
+  while (nl >= 0) {
+    const line = buffer.slice(0, nl);
+    buffer = buffer.slice(nl + 1);
+    if (line.trim()) {
+      try {
+        handle(JSON.parse(line));
+      } catch (e) {
+        process.stderr.write(`fake goose: ${e.message}\n`);
+      }
+    }
+    nl = buffer.indexOf('\n');
+  }
+});
+process.stdin.on('end', () => process.exit(0));

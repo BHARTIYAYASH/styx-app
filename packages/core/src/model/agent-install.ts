@@ -64,6 +64,16 @@ const RECIPES: Record<Exclude<Agent, 'shell'>, Record<InstallPlatform, InstallRe
     linux: [sh('curl -fsSL https://opencode.ai/install | bash')],
     win32: [ps('npm install -g opencode-ai', 'npm')],
   },
+  goose: {
+    darwin: [
+      sh('brew install block-goose-cli', 'brew'),
+      sh('curl -fsSL https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh | bash'),
+    ],
+    linux: [
+      sh('curl -fsSL https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh | bash'),
+    ],
+    win32: [ps('irm https://raw.githubusercontent.com/aaif-goose/goose/main/download_cli.ps1 | iex')],
+  },
 };
 
 const isInstallPlatform = (p: string): p is InstallPlatform =>
