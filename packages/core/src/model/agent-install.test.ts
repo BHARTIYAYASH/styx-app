@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { GIT_DOWNLOAD_URL, INSTALL_PLATFORMS, gitInstallRecipes, installRecipes } from './agent-install';
 
-const CONNECTABLE = ['claude', 'codex', 'gemini', 'cursor', 'opencode', 'amp'] as const;
+const CONNECTABLE = ['claude', 'codex', 'gemini', 'cursor', 'opencode', 'goose', 'amp'] as const;
 
 describe('installRecipes (#98)', () => {
   it('Amp uses its documented Bash installer on POSIX and its native PowerShell installer on Windows', () => {

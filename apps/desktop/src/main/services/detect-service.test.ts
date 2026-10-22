@@ -133,6 +133,33 @@ describe('DetectService', () => {
     expect((await opencode())?.authState).toBe('signed-in');
   });
 
+  it('detects Goose ACP from its help without claiming a verified provider login', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'styx-goose-detect-'));
+    const home = mkdtempSync(join(tmpdir(), 'styx-goose-home-'));
+    bin(dir, 'goose');
+    const deps: DetectDeps = {
+      platform: 'darwin',
+      home,
+      pathEnv: dir,
+      env: {},
+      systemBinDirs: [],
+      exec: async (_bin, args) => ({
+        stdout:
+          args[0] === '--version'
+            ? ' 1.55.0'
+            : 'Commands:\n  acp Run goose as an ACP agent server on stdio\n  session Start a session',
+        exitCode: 0,
+      }),
+    };
+    const goose = (await new DetectService(deps).detectClis()).find((c) => c.agent === 'goose');
+    expect(goose).toMatchObject({
+      found: true,
+      version: '1.55.0',
+      capabilities: { acp: true },
+      authState: 'unknown',
+    });
+  });
+
   it('detects Amp stream-json without treating it as interactive approval support', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'styx-amp-detect-'));
     const home = mkdtempSync(join(tmpdir(), 'styx-amp-home-'));

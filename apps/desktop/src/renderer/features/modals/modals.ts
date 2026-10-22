@@ -213,6 +213,7 @@ export const SPAWN_AGENTS: readonly Agent[] = [
   'gemini',
   'cursor',
   'opencode',
+  'goose',
   'amp',
   'shell',
 ];

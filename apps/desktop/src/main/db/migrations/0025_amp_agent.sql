@@ -1,9 +1,9 @@
--- 0024: Amp joins the agent CLIs (issue #20). Preserve both tables and their indexes/foreign keys.
+-- 0025: Amp joins the agent CLIs (issue #20). Preserve both tables and their indexes/foreign keys.
 CREATE TABLE sessions_new (
   id TEXT PRIMARY KEY,
   project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   worktree_id TEXT,
-  agent TEXT NOT NULL CHECK (agent IN ('claude','codex','gemini','cursor','opencode','amp','shell')),
+  agent TEXT NOT NULL CHECK (agent IN ('claude','codex','gemini','cursor','opencode','goose','amp','shell')),
   runner TEXT NOT NULL DEFAULT 'pty' CHECK (runner IN ('pty','stream')),
   model TEXT,
   state TEXT NOT NULL CHECK (state IN ('idle','working','needs-you','done','paused')),
@@ -44,7 +44,7 @@ CREATE INDEX sessions_project_state ON sessions(project_id, state);
 CREATE INDEX sessions_archive ON sessions(ended_at) WHERE archived_at IS NULL;
 
 CREATE TABLE cli_installs_new (
-  agent TEXT PRIMARY KEY CHECK (agent IN ('claude','codex','gemini','cursor','opencode','amp','shell')),
+  agent TEXT PRIMARY KEY CHECK (agent IN ('claude','codex','gemini','cursor','opencode','goose','amp','shell')),
   binary TEXT,
   version TEXT,
   found INTEGER NOT NULL DEFAULT 0,

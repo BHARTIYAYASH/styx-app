@@ -57,6 +57,7 @@ export const SHELL_WHICH_NAMES: readonly string[] = [
   'agent',
   'cursor-agent',
   'opencode',
+  'goose',
   'amp',
 ];
 

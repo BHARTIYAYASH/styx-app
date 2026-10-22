@@ -14,7 +14,7 @@ import { delimiter, dirname, join } from 'node:path';
 import { fallbackShell } from './pty-service';
 import type { CliCandidate, CliInstall, CliSource } from '@styx/core';
 
-export type AgentKind = 'claude' | 'codex' | 'gemini' | 'cursor' | 'opencode' | 'amp' | 'shell';
+export type AgentKind = 'claude' | 'codex' | 'gemini' | 'cursor' | 'opencode' | 'goose' | 'amp' | 'shell';
 export type AuthState = 'signed-in' | 'signed-out' | 'unknown' | 'n/a';
 export type { CliCandidate, CliSource };
 
@@ -115,6 +115,7 @@ const CLIS: { agent: AgentKind; label: string; bins: string[] }[] = [
   { agent: 'gemini', label: 'Gemini CLI', bins: ['gemini'] },
   { agent: 'cursor', label: 'Cursor agent', bins: ['cursor-agent', 'agent'] },
   { agent: 'opencode', label: 'OpenCode', bins: ['opencode'] },
+  { agent: 'goose', label: 'Goose', bins: ['goose'] },
   { agent: 'amp', label: 'Amp', bins: ['amp'] },
   { agent: 'shell', label: 'Shell', bins: [] },
 ];
@@ -144,6 +145,7 @@ const AGENT_MARKERS: Readonly<Record<Exclude<AgentKind, 'shell'>, RegExp>> = {
   cursor: /cursor/i,
   // `opencode --version` prints the bare number (1.18.35), so this only ever matches other output that names it.
   opencode: /opencode/i,
+  goose: /goose/i,
   amp: /\bamp\b/i,
 };
 
@@ -797,8 +799,9 @@ export class DetectService {
         return exists(h, '.cursor', 'cli-config.json') || exists(h, '.config', 'cursor-agent')
           ? 'signed-in'
           : 'unknown';
+      case 'goose':
       case 'amp':
-        // Generic settings cannot establish an Amp identity. Leave account verification to Amp's own tools.
+        // Configuration files cannot establish a verified provider identity.
         return 'unknown';
       case 'opencode':
         // Provider logins sit in `$XDG_DATA_HOME/opencode/auth.json` (default `~/.local/share/opencode`, checked

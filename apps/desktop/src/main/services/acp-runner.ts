@@ -12,6 +12,7 @@ import {
   type PermissionMode,
 } from '@styx/core';
 import { OPENCODE_MODES } from '../agents/opencode';
+import { GOOSE_MODES } from '../agents/goose';
 import type { McpServerEntry } from '../agents/types';
 import { logger } from './logger';
 import { STRIPPED_ENV } from '../providers/cli-runner';
@@ -204,6 +205,7 @@ const MODE_TABLES: Readonly<Partial<Record<Agent, Readonly<Record<PermissionMode
   gemini: GEMINI_MODES,
   cursor: CURSOR_MODES,
   opencode: OPENCODE_MODES,
+  goose: GOOSE_MODES,
 };
 /** For an agent with its own ids: the closest mode by id or name, tried in priority order. */
 const MODE_HINTS: Readonly<Record<PermissionMode, readonly RegExp[]>> = {
@@ -234,7 +236,7 @@ export const resolveAcpMode = (
   }
   // OpenCode's modes are agents Styx defines itself: a missing one means the launch config did not apply, and a
   // guess by name could land on an agent with looser rules (any user agent called "auto…"). Fail closed.
-  if (agent === 'opencode') return null;
+  if (agent === 'opencode' || agent === 'goose') return null;
   for (const re of MODE_HINTS[mode]) {
     const hit = available.find((m) => re.test(`${m.id} ${m.name ?? ''}`.toLowerCase()));
     if (hit) return { id: hit.id, exact: false };

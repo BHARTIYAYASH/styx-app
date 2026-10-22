@@ -53,6 +53,7 @@ describe('<AgentsPane />', () => {
       'gemini',
       'cursor',
       'opencode',
+      'goose',
       'amp',
       'shell',
     ]);
@@ -61,6 +62,7 @@ describe('<AgentsPane />', () => {
       'connected',
       'signed-out',
       'unverified',
+      'missing',
       'missing',
       'missing',
       'shell',
@@ -83,6 +85,7 @@ describe('<AgentsPane />', () => {
     ]);
     // The demo machine has no OpenCode: the row is there, not installed, with Connect.
     expect(cells('opencode')).toEqual(['OpenCode', 'not found on PATH', '—', 'not installed', 'Connect']);
+    expect(cells('goose')).toEqual(['Goose', 'not found on PATH', '—', 'not installed', 'Connect']);
     expect(cells('shell')).toEqual(['Shell', 'zsh 5.9', '—', 'ready', '']);
     // The onboarding step-3 recipe: a hollow dot that turns accent (`data-on`) when the row needs attention.
     const dot = (agent: string) => document.querySelector(`[data-agent-row="${agent}"] [data-tone]`);

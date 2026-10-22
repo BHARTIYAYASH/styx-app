@@ -21,6 +21,9 @@
   .dot[data-agent='opencode'] {
     background: var(--agent-opencode);
   }
+  .dot[data-agent='goose'] {
+    background: var(--agent-goose);
+  }
   .dot[data-agent='amp'] {
     background: var(--agent-amp);
   }

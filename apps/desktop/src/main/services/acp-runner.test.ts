@@ -1403,6 +1403,23 @@ describe('resolveAcpMode / pickAuthMethod / acpMcpServer', () => {
     expect(resolveAcpMode(mode, opencode, 'opencode')).toEqual({ id, exact: true });
   });
 
+  it.each([
+    ['default', 'approve'],
+    ['acceptEdits', 'approve'],
+    ['auto', 'approve'],
+    ['plan', 'chat'],
+    ['dontAsk', 'chat'],
+    ['bypassPermissions', 'auto'],
+  ] as const)('goose: %s → %s', (mode, id) => {
+    const available = ['auto', 'approve', 'smart_approve', 'chat'].map((id) => ({ id }));
+    expect(resolveAcpMode(mode, available, 'goose')).toEqual({ id, exact: true });
+  });
+
+  it('goose never guesses a permissive mode when approve or chat is absent', () => {
+    for (const mode of ['default', 'auto', 'acceptEdits', 'plan', 'dontAsk'] as const)
+      expect(resolveAcpMode(mode, [{ id: 'auto' }, { id: 'smart_approve' }], 'goose')).toBeNull();
+  });
+
   it('opencode fails closed: a mode its launch config should have defined but did not is null, never a name guess', () => {
     const stock = [{ id: 'build' }, { id: 'plan' }, { id: 'yolo-auto', name: 'Full auto' }];
     for (const mode of ['acceptEdits', 'auto', 'bypassPermissions', 'dontAsk'] as const)

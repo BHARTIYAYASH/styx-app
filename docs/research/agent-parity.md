@@ -3,6 +3,7 @@
 Date: 2026-09-16. Machine: `codex` 0.154.0 (`~/.local/bin/codex` → standalone release), `claude` 2.1.263.
 `gemini` and `agent` (Cursor) are not installed here; their sections rest on vendor docs and are marked unverified.
 OpenCode (§8) was added on 2026-10-08 and probed for real (1.18.35).
+Goose (§9) was added on 2026-10-22; its CLI flags and ACP initialization were checked on 1.55.0.
 
 The bar is what Styx gives Claude Code today (§3). The question is how close each other CLI can get, through which
 interface, and what it costs. Everything under "verified" was run on this machine; the protocol types come from
@@ -355,7 +356,29 @@ on `run`) has no ACP equivalent here.
 | Publish drafts                | ✗ file-list fallback (`run --format json` not checked)                   |
 | One-click setup card          | ✗ the sign-in is a provider picker, not one plan's browser flow          |
 
-## Amp (issue 20; 2026-10-22)
+## 9. Goose 1.55.0 (issue #19)
+
+Checked on Windows, 2026-10-22, using the official release in an isolated `GOOSE_PATH_ROOT` with no provider
+credentials: `--version`, `acp --help`, `session --help`, ACP `initialize`, and the missing-provider error from
+`session/new`. No model turn was run. The scripted e2e peer covers chat, permission cards, mode switching and the
+Styx MCP handoff in light and dark.
+
+`goose acp --with-builtin developer` reuses the ACP runner. `GOOSE_MODE` is set per process: `approve` for Default,
+Accept edits and Auto; `chat` (no tools) for Plan and Don't ask; `auto` only for Bypass permissions. Goose's
+`smart_approve` is not an edit-only mode. A selected model is passed as `GOOSE_MODEL` on the configured provider.
+The terminal fallback uses `goose session --with-builtin developer --with-extension <command>`; only its flags
+and parser, not live inference, were checked.
+
+Goose persists ACP MCP extension settings in its session database. The Styx entry therefore has an empty `env`:
+the MCP process inherits `STYX_*` from Goose instead of storing the broker token. Provider credentials stay with
+Goose. Verification stays unknown: `goose info --check` spends a model turn, while `--verbose` can print config.
+
+Versioned sources: [ACP response and modes](https://github.com/aaif-goose/goose/blob/v1.55.0/crates/goose/src/acp/response_builder.rs),
+[session settings persistence](https://github.com/aaif-goose/goose/blob/v1.55.0/crates/goose/src/acp/server/new_session.rs),
+[CLI status check](https://github.com/aaif-goose/goose/blob/v1.55.0/crates/goose-cli/src/commands/info.rs),
+[extension command parser](https://github.com/aaif-goose/goose/blob/v1.55.0/crates/goose/src/utils.rs).
+
+## 10. Amp (issue 20; 2026-10-22)
 
 Checked official native CLI `0.0.1792670445-ge8d5b3`: `--help`, `permissions test --json --workspace`, [stream-json](https://ampcode.com/docs/cli/streaming-json), [execute](https://ampcode.com/docs/cli/execute-mode), and [Neo permission defaults](https://ampcode.com/news/neo). Amp has Claude-shaped JSON but no documented permission-response channel. The community ACP adapter 0.10.0 also inherits Amp’s configured/default policy, rather than forwarding an approval round trip. Use the existing terminal runner.
 

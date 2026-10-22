@@ -655,6 +655,7 @@ export const agentInvocation = (agent: Agent, binary: string, kind: MessageKind)
     case 'cursor':
     // OpenCode's `run --format json` events were not checked against a real run: the file-list fallback drafts.
     case 'opencode':
+    case 'goose':
     case 'amp':
     case 'shell':
       return null;

@@ -63,11 +63,12 @@ const LOGIN_ARGS: Record<ConnectableAgent, string[]> = {
   cursor: ['login'],
   gemini: [],
   opencode: ['auth', 'login'],
+  goose: ['configure'],
   amp: ['login'],
 };
 
 /** Who the CLI says it is signed in as. Gemini has no status command (see `probeGemini`). */
-const STATUS_ARGS: Record<Exclude<ConnectableAgent, 'gemini' | 'amp'>, string[]> = {
+const STATUS_ARGS: Record<Exclude<ConnectableAgent, 'gemini' | 'goose' | 'amp'>, string[]> = {
   claude: ['auth', 'status', '--json'],
   codex: ['login', 'status'],
   cursor: ['status'],
@@ -80,6 +81,7 @@ const INSTALL_GUIDES: Record<ConnectableAgent, string> = {
   gemini: 'https://github.com/google-gemini/gemini-cli',
   cursor: 'https://cursor.com/docs/cli',
   opencode: 'https://opencode.ai/docs',
+  goose: 'https://block.github.io/goose/docs/getting-started/installation/',
   amp: 'https://ampcode.com/docs/cli',
 };
 
@@ -338,6 +340,9 @@ export class AgentService {
     capabilities: CliInstall['capabilities'],
   ): Promise<Probe> {
     if (agent === 'gemini') return this.probeGemini();
+    // `goose info --check` spends a model turn; `--verbose` can print configuration. Neither is a safe auth probe.
+    // Keep credentials with Goose and let the session report provider errors rather than claiming a verified login.
+    if (agent === 'goose') return { authState: 'unknown', account: null };
     // Do not start a model turn to verify Amp. Its account tools remain available in its own terminal.
     if (agent === 'amp') return { authState: 'unknown', account: null };
     if (agent === 'codex' && capabilities['appServer'] === true) {

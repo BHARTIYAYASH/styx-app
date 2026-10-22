@@ -194,6 +194,6 @@ describe('agentPreamble (ADR-0025): CLIs without a system-prompt flag get the sa
       ),
     );
     expect(agentPreamble({ branch: 'x', base: 'main', others: '' })).toContain(PONYTAIL_PROMPT);
-    expect(PREAMBLE_AGENTS).toEqual(['codex', 'gemini', 'cursor', 'opencode', 'amp']);
+    expect(PREAMBLE_AGENTS).toEqual(['codex', 'gemini', 'cursor', 'opencode', 'goose', 'amp']);
   });
 });

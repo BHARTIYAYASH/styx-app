@@ -3,6 +3,7 @@ import { claudeLaunch } from './claude';
 import { codexLaunch } from './codex';
 import { cursorLaunch } from './cursor';
 import { geminiLaunch } from './gemini';
+import { gooseLaunch } from './goose';
 import { opencodeLaunch } from './opencode';
 import { shellLaunch } from './shell';
 import type { AgentLaunch, AgentLaunchContext } from './types';
@@ -27,6 +28,8 @@ export function buildAgentLaunch(ctx: AgentLaunchContext): Promise<AgentLaunch> 
       return cursorLaunch(ctx);
     case 'opencode':
       return opencodeLaunch(ctx);
+    case 'goose':
+      return gooseLaunch(ctx);
     case 'amp':
       return ampLaunch(ctx);
     case 'shell':

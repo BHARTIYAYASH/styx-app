@@ -17,6 +17,9 @@ describe('runnerFor', () => {
     // OpenCode's `run --format json` is not Claude's stream-json: without ACP it stays on the TUI.
     ['opencode', { streamJson: true, printMode: true }, 'pty'],
     ['opencode', {}, 'pty'],
+    ['goose', { acp: true }, 'stream'],
+    ['goose', { streamJson: true }, 'pty'],
+    ['goose', {}, 'pty'],
     // Amp stream-json has no documented approval round trip: keep all tool decisions in the TUI.
     ['amp', { streamJson: true, printMode: true, acp: true }, 'pty'],
     ['amp', {}, 'pty'],
