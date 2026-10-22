@@ -1,4 +1,4 @@
-import type { Target } from '@styx/core';
+import { PROVIDER_PROJECT_REF, type Target } from '@styx/core';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import type { CliRunner } from '../providers/cli-runner';
@@ -135,8 +135,9 @@ export async function detectDeployCommands(
     }
     case 'supabase': {
       if (!has(join('supabase', 'config.toml'))) return out;
-      const ref = cfg('projectRef') ?? cfg('ref');
-      const flag = ref === null ? '' : ` --project-ref ${ref}`;
+      const ref = target.config.ref;
+      const projectRef = typeof ref === 'string' && PROVIDER_PROJECT_REF.test(ref) ? ref : null;
+      const flag = projectRef === null ? '' : ` --project-ref ${projectRef}`;
       const functions = readDir(join(projectPath, 'supabase', 'functions')).length > 0;
       out.push({
         command: functions
