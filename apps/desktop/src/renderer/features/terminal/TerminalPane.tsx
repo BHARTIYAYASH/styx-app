@@ -2,6 +2,7 @@ import { copy, fill, type SessionId, type WorktreeId } from '@styx/core';
 import { sizes } from '@styx/tokens';
 import { useCallback, useEffect, useRef, type KeyboardEvent, type PointerEvent } from 'react';
 import { command } from '../../state/commands';
+import { createLoginTerminal, disposeLoginTerminal } from '../modals/login-terminal';
 import { useUi } from '../../state/hooks';
 import {
   attachTerminal,
@@ -35,6 +36,8 @@ export interface TerminalPaneProps {
   columnHeight: () => number;
   /** The workspace's Terminal tab (ADR-0027 §2): the terminal takes the whole column; no handle, no collapse. */
   fill?: boolean;
+  /** A terminal-only agent's existing process: show its prompts rather than starting a separate shell. */
+  agentTerminal?: { id: SessionId; pid: number | null } | null;
 }
 
 /**
@@ -48,6 +51,7 @@ export function TerminalPane({
   screenReader,
   columnHeight,
   fill: filling = false,
+  agentTerminal = null,
 }: TerminalPaneProps) {
   const host = useRef<HTMLDivElement>(null);
   const entry = useRef<TerminalEntry | null>(null);
@@ -59,6 +63,15 @@ export function TerminalPane({
   useEffect(() => {
     const el = host.current;
     if (el === null) return;
+    if (agentTerminal !== null) {
+      const e = createLoginTerminal(agentTerminal.id, { screenReader });
+      entry.current = e;
+      attachTerminal(e, el);
+      return () => {
+        disposeLoginTerminal(e);
+        entry.current = null;
+      };
+    }
     const e = getTerminal(sessionId ?? worktreeId, worktreeId, { screenReader });
     entry.current = e;
     attachTerminal(e, el);
@@ -68,7 +81,7 @@ export function TerminalPane({
     };
     // screenReader is applied below without re-attaching.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, worktreeId]);
+  }, [sessionId, worktreeId, agentTerminal?.id, agentTerminal?.pid]);
 
   useEffect(() => {
     if (entry.current !== null) setTerminalScreenReader(entry.current, screenReader);

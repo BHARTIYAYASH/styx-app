@@ -47,7 +47,9 @@ export const sessions = sqliteTable(
       .notNull()
       .references(() => projects.id, { onDelete: 'cascade' }),
     worktreeId: text('worktree_id'),
-    agent: text('agent', { enum: ['claude', 'codex', 'gemini', 'cursor', 'opencode', 'shell'] }).notNull(),
+    agent: text('agent', {
+      enum: ['claude', 'codex', 'gemini', 'cursor', 'opencode', 'amp', 'shell'],
+    }).notNull(),
     runner: text('runner', { enum: ['pty', 'stream'] })
       .notNull()
       .default('pty'),
@@ -355,7 +357,9 @@ export const ideInstalls = sqliteTable(
 );
 
 export const cliInstalls = sqliteTable('cli_installs', {
-  agent: text('agent', { enum: ['claude', 'codex', 'gemini', 'cursor', 'opencode', 'shell'] }).primaryKey(),
+  agent: text('agent', {
+    enum: ['claude', 'codex', 'gemini', 'cursor', 'opencode', 'amp', 'shell'],
+  }).primaryKey(),
   binary: text('binary'),
   version: text('version'),
   found: integer('found').notNull().default(0),

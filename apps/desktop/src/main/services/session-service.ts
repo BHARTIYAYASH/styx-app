@@ -82,7 +82,7 @@ export const STREAM_FLUSH_MS = 33;
 export const STREAM_ACTIVITY_MS = 1000;
 
 /** Hook payloads (`styx hook <agent>` → broker `hook`) are untyped JSON from the CLI. */
-export type HookAgent = 'claude' | 'codex' | 'gemini' | 'cursor' | 'opencode' | 'shell';
+export type HookAgent = 'claude' | 'codex' | 'gemini' | 'cursor' | 'opencode' | 'amp' | 'shell';
 
 export interface SessionServiceDeps {
   repos: Repos;
@@ -1167,7 +1167,10 @@ export class SessionService {
   }
 
   private typeIntoPty(sessionId: string, text: string): void {
-    this.deps.pty.write(sessionId, text);
+    const input = this.launches.get(sessionId)?.bracketedPaste
+      ? `\x1b[200~${text.replace(/\x1b/g, '')}\x1b[201~`
+      : text;
+    this.deps.pty.write(sessionId, input);
     setTimeout(() => this.deps.pty.write(sessionId, '\r'), 120).unref?.();
   }
 
@@ -1427,7 +1430,7 @@ export class SessionService {
   async refreshClis(): Promise<CliInstall[]> {
     const { repos, publisher } = this.deps;
     const overrides: Partial<Record<Exclude<Agent, 'shell'>, string>> = {};
-    for (const agent of ['claude', 'codex', 'gemini', 'cursor', 'opencode'] as const) {
+    for (const agent of ['claude', 'codex', 'gemini', 'cursor', 'opencode', 'amp'] as const) {
       const picked = repos.settings.kv.get<string>(cliBinaryKey(agent));
       if (picked === undefined) continue;
       if (existsSync(picked)) overrides[agent] = picked;

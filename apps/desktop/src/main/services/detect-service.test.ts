@@ -133,6 +133,38 @@ describe('DetectService', () => {
     expect((await opencode())?.authState).toBe('signed-in');
   });
 
+  it('detects Amp stream-json without treating it as interactive approval support', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'styx-amp-detect-'));
+    const home = mkdtempSync(join(tmpdir(), 'styx-amp-home-'));
+    bin(dir, 'amp');
+    const deps: DetectDeps = {
+      platform: 'darwin',
+      home,
+      pathEnv: dir,
+      env: {},
+      systemBinDirs: [],
+      exec: async (_bin, args) => ({
+        stdout:
+          args[0] === '--version'
+            ? '0.0.1792670445-ge8d5b3'
+            : 'amp --execute --stream-json --stream-json-input --mcp-config',
+        exitCode: 0,
+      }),
+    };
+    const amp = (await new DetectService(deps).detectClis()).find((c) => c.agent === 'amp');
+    expect(amp).toMatchObject({
+      found: true,
+      version: '0.0.1792670445-ge8d5b3',
+      capabilities: { acp: false, streamJson: true },
+      authState: 'unknown',
+    });
+    const located = bin(home, 'custom-amp');
+    const manual = (await new DetectService(deps).detectClis({ amp: located })).find(
+      (c) => c.agent === 'amp',
+    );
+    expect(manual).toMatchObject({ binary: located, source: 'manual', found: true });
+  });
+
   it('looks in OpenCode’s installer folder (~/.opencode/bin)', () => {
     expect(wellKnownBinDirs('/Users/me', 'darwin', {})).toContain(join('/Users/me', '.opencode', 'bin'));
     expect(wellKnownBinDirs('/home/me', 'linux', {})).toContain(join('/home/me', '.opencode', 'bin'));
@@ -236,8 +268,9 @@ describe('DetectService', () => {
       const posix = wellKnownBinDirs(home, 'darwin', {}, ['/opt/homebrew/bin']).map((d) =>
         d.replace(/\\/g, '/'),
       );
-      expect(posix.slice(0, 3)).toEqual([
+      expect(posix.slice(0, 4)).toEqual([
         '/Users/nic/.local/bin',
+        '/Users/nic/.amp/bin',
         '/opt/homebrew/bin',
         '/Users/nic/.npm-global/bin',
       ]);

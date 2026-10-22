@@ -16,6 +16,7 @@ import type {
   StreamSpawnOptions,
 } from './stream-runner';
 import { slow } from '../test-timeouts';
+import { ExecaGitRunner } from './git';
 
 const { ids, DEMO_NOW } = fixtures;
 
@@ -186,6 +187,41 @@ describe('runnerFor (ADR-0010)', () => {
     expect(runnerFor('cursor', { capabilities: { streamJson: true, printMode: true } })).toBe('stream');
     expect(runnerFor('codex', { capabilities: { streamJson: true, printMode: true } })).toBe('pty');
     expect(runnerFor('shell', null)).toBe('pty');
+  });
+});
+
+describe('Amp terminal messages', () => {
+  it('pastes multiline turns as one input, strips injected paste terminators and retains scoped shims', async () => {
+    const { app: a } = app();
+    const path = mkdtempSync(join(tmpdir(), 'styx-amp-session-'));
+    await new ExecaGitRunner().run(['init', '--quiet'], path);
+    const worktree = a.repos.worktrees.get(ids.worktree.testFlaky)!;
+    a.repos.worktrees.upsert({ ...worktree, path });
+    pty.resolveLoginPath = async () => process.env['PATH'] ?? '';
+    a.repos.discovery.saveCli({
+      ...a.repos.discovery.cli('claude')!,
+      agent: 'amp',
+      binary: '/bin/amp',
+      found: true,
+      capabilities: { streamJson: true },
+    });
+    const { session } = await a.sessions.spawn({
+      ...spawnInput('gemini', worktree.id, 'first\nsecond'),
+      agent: 'amp',
+    });
+    expect(session.runner).toBe('pty');
+    expect(pty.spawned[0]?.cwd).toBe(path);
+    expect(pty.spawned[0]?.env['STYX_SESSION_ID']).toBe(session.id);
+    expect(pty.spawned[0]?.env['STYX_TOKEN']).toBeTruthy();
+    await vi.waitFor(
+      () => expect(pty.writes.some((w) => /first\nsecond\x1b\[201~$/.test(w.data))).toBe(true),
+      WAIT,
+    );
+    pty.writes.length = 0;
+    await a.sessions.sendMessage(session.id, 'more\ntext\x1b[201~', [], { now: true });
+    expect(pty.writes.some((w) => w.data === '\x1b[200~more\ntext[201~\x1b[201~')).toBe(true);
+    await typed();
+    expect(pty.writes.at(-1)?.data).toBe('\r');
   });
 });
 

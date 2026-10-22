@@ -612,6 +612,14 @@ export const copy = {
         dontAsk: 'Cursor has no such mode: runs as Agent and still asks you here.',
         auto: 'Cursor has no reviewer: runs as Agent and still asks you here.',
       },
+      amp: {
+        default: 'Amp asks before every tool call in its terminal.',
+        acceptEdits: 'Amp has no edit-only mode here: every tool call still asks in its terminal.',
+        plan: 'All Amp tool calls are rejected, including reads.',
+        bypassPermissions: 'Amp allows every tool call. Only for sandboxes you trust.',
+        dontAsk: 'All Amp tool calls are rejected, including reads.',
+        auto: 'Amp has no Styx reviewer: every tool call still asks in its terminal.',
+      },
       opencode: {
         default: 'Edits, commands and web fetches ask you here.',
         acceptEdits: 'Edits run without asking; commands and web fetches still ask.',
@@ -1892,6 +1900,7 @@ Reply in chat. Don't write a file, open a PR, or produce a plan document. Use ex
     gemini: 'Gemini',
     cursor: 'Cursor',
     opencode: 'OpenCode',
+    amp: 'Amp',
     shell: 'shell',
   },
   /** Where a detected CLI binary lives (Settings › Agents & CLIs, onboarding step 3). */
@@ -1913,6 +1922,7 @@ Reply in chat. Don't write a file, open a PR, or produce a plan document. Use ex
     gemini: 'Gemini CLI',
     cursor: 'Cursor agent',
     opencode: 'OpenCode',
+    amp: 'Amp',
     shell: 'Shell',
   },
   providers: {

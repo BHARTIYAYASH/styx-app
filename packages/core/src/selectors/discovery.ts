@@ -63,6 +63,7 @@ export const CLI_INSTALL_URLS: Readonly<Record<Exclude<CliInstall['agent'], 'she
   gemini: 'https://github.com/google-gemini/gemini-cli#installation',
   cursor: 'https://cursor.com/docs/cli/installation',
   opencode: 'https://opencode.ai/docs',
+  amp: 'https://ampcode.com/docs/cli',
 };
 
 /** Official install pages for the provider CLIs shown in Connect target. SSH has no CLI step. */

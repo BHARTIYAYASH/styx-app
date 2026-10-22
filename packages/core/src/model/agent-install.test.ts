@@ -1,9 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { GIT_DOWNLOAD_URL, INSTALL_PLATFORMS, gitInstallRecipes, installRecipes } from './agent-install';
 
-const CONNECTABLE = ['claude', 'codex', 'gemini', 'cursor'] as const;
+const CONNECTABLE = ['claude', 'codex', 'gemini', 'cursor', 'opencode', 'amp'] as const;
 
 describe('installRecipes (#98)', () => {
+  it('Amp uses its documented Bash installer on POSIX and its native PowerShell installer on Windows', () => {
+    for (const platform of ['darwin', 'linux'])
+      expect(installRecipes('amp', platform)).toEqual([
+        { command: 'curl -fsSL https://ampcode.com/install.sh | bash', shell: 'sh', requires: null },
+      ]);
+    expect(installRecipes('amp', 'win32')).toEqual([
+      { command: 'irm https://ampcode.com/install.ps1 | iex', shell: 'powershell', requires: null },
+    ]);
+  });
   it('every connectable agent has a recipe per platform; the shell and an unknown OS have none', () => {
     for (const p of INSTALL_PLATFORMS)
       for (const a of CONNECTABLE) expect(installRecipes(a, p).length, `${a} on ${p}`).toBeGreaterThan(0);

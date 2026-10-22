@@ -14,6 +14,7 @@ Styx doesn't come with an AI of its own. It runs the coding agent CLIs on your c
 | **Gemini CLI**   | `gemini`                             | A Google account                                            |
 | **Cursor agent** | `cursor-agent` (or `agent`)          | A Cursor plan                                               |
 | **OpenCode**     | `opencode`                           | Any provider OpenCode supports, or none for its free models |
+| **Amp**          | `amp`                                | Your Amp account (`amp login`)                              |
 | **Shell**        | Your shell (zsh, bash or PowerShell) | Nothing to sign in to                                       |
 
 You can use any mix. Each task picks its agent, so one project can have Claude Code on one branch and Codex on another.
@@ -32,6 +33,12 @@ On the card, **Set up** runs four steps out of sight and ticks each one off:
 One ready agent is enough to start. **Show details** shows what the installer or sign-in printed, if you want to see it.
 
 OpenCode has no card: it isn't one plan, and its sign-in asks which provider you want. In **Settings › Agents**, **Connect** on its row opens the tools straight away: **Install opencode…** runs OpenCode's own installer (`curl -fsSL https://opencode.ai/install | bash` on a Mac or Linux, `npm install -g opencode-ai` on Windows) in a terminal you can watch, and **Sign in with opencode…** runs `opencode auth login` there, where you pick a provider and sign in or paste its key.
+
+Amp uses the manual tools in **Settings › Agents**. Install the CLI, then **Sign in** with `amp login`. Styx keeps credentials with Amp. **Verify** remains **not verified**; use Amp’s own account tools to check your login. A task can still start.
+
+Amp runs its interactive terminal inside the task’s worktree, with Styx MCP tools and target-command shims. Open the task’s **Terminal** tab to read replies and answer Amp’s prompts. Its stream-json format has no documented interactive approval response, so Styx keeps tool prompts in Amp’s terminal. Native chat cards, live mode switches and background tasks are unavailable. **Default**, **Accept edits** and **Auto** ask before every tool; **Plan** and **Don’t ask** reject every tool, including reads. Only **Bypass permissions** requests automatic tool approval through a process flag; that setting is never saved in the worktree. These rules apply at launch. The model field takes Amp mode names, such as `low`, `medium` or `high`.
+
+Styx temporarily pins those rules in an untracked `.amp/settings.json` and restores that file verbatim on cleanup; a pre-existing `.amp/settings.jsonc` is left untouched and shadowed for the session. A tracked or invalid `settings.json`, symbolic link or junction stops launch rather than changing versioned settings or following a linked path. Provider keys and the Styx broker token are not written there.
 
 If a step stops, the card says why in one sentence and offers the fix:
 
@@ -77,7 +84,7 @@ Styx watches those folders, so an agent you install in a terminal shows up withi
 
 Open **Settings › Agents**, select **Connect** on the agent's row, then **I'll do it myself** for the manual tools:
 
-1. **Check it runs in a terminal.** Open a new terminal and run `claude --version` (or `codex`, `gemini`, `cursor-agent`, `opencode`). If that fails too, the CLI isn't installed or isn't on your PATH: use the dialog's **Install** link, which runs the vendor's installer in a terminal you can watch, or **Install guide** for the vendor's instructions.
+1. **Check it runs in a terminal.** Open a new terminal and run `claude --version` (or `codex`, `gemini`, `cursor-agent`, `opencode`, `amp`). If that fails too, the CLI isn't installed or isn't on your PATH: use the dialog's **Install** link, which runs the vendor's installer in a terminal you can watch, or **Install guide** for the vendor's instructions.
 2. **Rescan.** If you just installed it, select **Rescan** in Settings › Agents. A CLI installed into a brand new folder may also need you to open a new terminal so your shell picks up the PATH change.
 3. **Point Styx at it.** Type a path or a command name into **Path or command** (for example `~/.local/bin/claude`, or just `claude`) and select **Use**, or **Locate binary** to pick the file. Styx runs it before accepting it, and tells you if you picked a folder, a file that doesn't report a version, or a different agent's CLI.
 4. **See where Styx looked.** **Looked in n folders** and **Show where** list every folder searched, so "not installed" is never a mystery.

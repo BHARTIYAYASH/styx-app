@@ -354,3 +354,15 @@ on `run`) has no ACP equivalent here.
 | Agents page identity          | ◐ provider names from `opencode auth list`, no email                     |
 | Publish drafts                | ✗ file-list fallback (`run --format json` not checked)                   |
 | One-click setup card          | ✗ the sign-in is a provider picker, not one plan's browser flow          |
+
+## Amp (issue 20; 2026-10-22)
+
+Checked official native CLI `0.0.1792670445-ge8d5b3`: `--help`, `permissions test --json --workspace`, [stream-json](https://ampcode.com/docs/cli/streaming-json), [execute](https://ampcode.com/docs/cli/execute-mode), and [Neo permission defaults](https://ampcode.com/news/neo). Amp has Claude-shaped JSON but no documented permission-response channel. The community ACP adapter 0.10.0 also inherits Amp’s configured/default policy, rather than forwarding an approval round trip. Use the existing terminal runner.
+
+Pin workspace `amp.dangerouslyAllowAll=false` and catch-all `ask` for Default/Accept edits/Auto; catch-all `reject` for Plan/Don’t ask. Explicit Bypass alone adds `--dangerously-allow-all` to the process; on disk it still keeps false + ask, so a crash cannot leave an automatic-approval policy behind. Native offline evaluation confirmed ask/reject/allow; settings.json wins over settings.jsonc. Merge other untracked JSON settings and restore the original bytes on cleanup. Refuse tracked settings so temporary policy cannot enter Land/Publish, and reject symlink/junction paths before reading or writing, including cleanup. Replace settings atomically; reject invalid JSON with a fixed error instead of logging configuration values or starting with permissive defaults. `--executor local` keeps execution in the lane. `--mcp-config` points at a private file with an inherited-environment Styx server and no token. Amp’s model input selects a mode using `--mode`, not an invented --model flag.
+
+No live model call or paid usage was made. Terminal transport, migration, settings restoration and permission mappings are covered with fake CLIs; live inference/provider authentication remain unverified. Native chat/permission cards, live configuration and background tasks are unavailable.
+
+The task's Terminal pane attaches Amp's existing PTY (including backlog and keyboard input), using the existing terminal attachment helper. It does not open an unrelated shell for Amp. The view reattaches when the process PID changes. E2E covers a terminal approval key and multiline first/subsequent composer messages in both themes.
+
+Bypass evidence: the native CLI accepts its positive flag and official `@ampcode/sdk` 0.1.0-20260918210405-g81edbf0 emits it for `dangerouslyAllowAll`. The offline permission-rule command reports configured rules, not live tool execution; the bypass override during inference remains unverified without a model call.

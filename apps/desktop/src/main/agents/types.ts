@@ -70,13 +70,15 @@ export interface AgentLaunch {
   env: Record<string, string>;
   /** When the CLI takes no prompt argument, the first message is typed into the pty after start. */
   typeFirstMessage: boolean;
+  /** Use bracketed paste for terminal CLIs that support it, so multiline turns stay one message. */
+  bracketedPaste?: boolean;
   /** Present only for `stream` launches. */
   stream?: StreamInput;
   cleanup(): Promise<void>;
 }
 
 /** CLIs with no system-prompt flag: what Claude Code gets in `--append-system-prompt` goes ahead of their first turn. */
-export const PREAMBLE_AGENTS: readonly Agent[] = ['codex', 'gemini', 'cursor', 'opencode'];
+export const PREAMBLE_AGENTS: readonly Agent[] = ['codex', 'gemini', 'cursor', 'opencode', 'amp'];
 
 /**
  * The lines every agent should start with (ADR-0025): the shims, peers, the lane, other lanes and built-in coding guidance —

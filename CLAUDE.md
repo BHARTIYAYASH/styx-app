@@ -1,7 +1,7 @@
 # Styx
 
 Desktop app (macOS, Windows, and Linux in beta; Electron + React) that runs coding agents (Claude Code, Codex, Gemini CLI, Cursor,
-OpenCode, shell) on many projects at once. Each task is a **lane**: one agent session on its own git worktree and
+OpenCode, Amp, shell) on many projects at once. Each task is a **lane**: one agent session on its own git worktree and
 branch, with its chat, changes, preview, checks and access. Agents reach deploy/server targets (Vercel, Supabase, AWS,
 GCP, Fly.io, Railway, Render, GitHub, SSH) only through scoped, expiring grants, and every request, grant, use and
 revoke goes into an append-only audit log.
@@ -102,7 +102,7 @@ Node ≥ 22, pnpm 10 (`corepack enable`). Run one package with `pnpm -F <name> <
   holds secrets.
 - Agent runners (ADR-0010/0016/0017): Claude Code over `stream-runner.ts`, Codex over `codex app-server`
   (`app-server-runner.ts`), Gemini, Cursor and OpenCode over ACP (`acp-runner.ts`; Cursor falls back to `--print`
-  stream-json), shell over a pty; `runner-mux.ts` routes them. Codex's TUI cannot take messages through a pty, so
+  stream-json), Amp and shell over a pty; `runner-mux.ts` routes them. Codex's TUI cannot take messages through a pty, so
   never route Codex there. New agent: `docs/contributing/adding-an-agent.md`.
 - Lanes: one session = one worktree on `agent/<name>-<n>` (`branchPrefix`). Lane services: `lane-sync-service`
   (keep current with base), `lane-ledger-service`, `land-service`, `merge-resolve-service`, `publish-service`,

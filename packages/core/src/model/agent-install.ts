@@ -64,6 +64,11 @@ const RECIPES: Record<Exclude<Agent, 'shell'>, Record<InstallPlatform, InstallRe
     linux: [sh('curl -fsSL https://opencode.ai/install | bash')],
     win32: [ps('npm install -g opencode-ai', 'npm')],
   },
+  amp: {
+    darwin: [sh('curl -fsSL https://ampcode.com/install.sh | bash')],
+    linux: [sh('curl -fsSL https://ampcode.com/install.sh | bash')],
+    win32: [ps('irm https://ampcode.com/install.ps1 | iex')],
+  },
 };
 
 const isInstallPlatform = (p: string): p is InstallPlatform =>
