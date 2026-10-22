@@ -63,10 +63,11 @@ const LOGIN_ARGS: Record<ConnectableAgent, string[]> = {
   cursor: ['login'],
   gemini: [],
   opencode: ['auth', 'login'],
+  goose: ['configure'],
 };
 
 /** Who the CLI says it is signed in as. Gemini has no status command (see `probeGemini`). */
-const STATUS_ARGS: Record<Exclude<ConnectableAgent, 'gemini'>, string[]> = {
+const STATUS_ARGS: Record<Exclude<ConnectableAgent, 'gemini' | 'goose'>, string[]> = {
   claude: ['auth', 'status', '--json'],
   codex: ['login', 'status'],
   cursor: ['status'],
@@ -79,6 +80,7 @@ const INSTALL_GUIDES: Record<ConnectableAgent, string> = {
   gemini: 'https://github.com/google-gemini/gemini-cli',
   cursor: 'https://cursor.com/docs/cli',
   opencode: 'https://opencode.ai/docs',
+  goose: 'https://block.github.io/goose/docs/getting-started/installation/',
 };
 
 /**
@@ -86,7 +88,7 @@ const INSTALL_GUIDES: Record<ConnectableAgent, string> = {
  * `models` is the CLI's own catalogue when the probe could ask for one (Codex app-server).
  */
 interface Probe {
-  authState: 'signed-in' | 'signed-out';
+  authState: 'signed-in' | 'signed-out' | 'unknown';
   account: string | null;
   models?: ModelInfo[];
 }
@@ -336,6 +338,9 @@ export class AgentService {
     capabilities: CliInstall['capabilities'],
   ): Promise<Probe> {
     if (agent === 'gemini') return this.probeGemini();
+    // `goose info --check` spends a model turn; `--verbose` can print configuration. Neither is a safe auth probe.
+    // Keep credentials with Goose and let the session report provider errors rather than claiming a verified login.
+    if (agent === 'goose') return { authState: 'unknown', account: null };
     if (agent === 'codex' && capabilities['appServer'] === true) {
       // ADR-0016: the app-server names the account (email · plan) and the models; an older build without one
       // (probe → null) is asked the old way below.

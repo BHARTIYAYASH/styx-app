@@ -190,6 +190,24 @@ describe('runnerFor (ADR-0010)', () => {
 });
 
 describe('SessionService spawn + stream runner', () => {
+  it('Goose inherits broker authentication without persisting it in the ACP MCP server entry', async () => {
+    const { app: a } = app();
+    const cursor = a.repos.sessions.get(ids.session.cursor)!;
+    a.repos.sessions.upsert({ ...cursor, state: 'done', endedAt: DEMO_NOW, pid: null, exitCode: 0 });
+    const cli = a.repos.discovery.cli('claude')!;
+    a.repos.discovery.saveCli({ ...cli, agent: 'goose', binary: '/bin/goose', capabilities: { acp: true } });
+    const { session } = await a.sessions.spawn({
+      ...spawnInput('gemini', ids.worktree.featPromo),
+      agent: 'goose',
+    });
+    expect(session.runner).toBe('stream');
+    const launch = stream.spawned[0]!;
+    expect(launch.env['STYX_TOKEN']).toBeTruthy();
+    expect(launch.session?.mcp.env).toEqual({});
+    expect(JSON.stringify(launch.session?.mcp)).not.toContain(launch.env['STYX_TOKEN']);
+    expect(launch.firstMessage).toContain(copy.agentPrompt.shims);
+  });
+
   it('spawns claude through the stream runner, feeds effects into transcript, hunks, note and state', async () => {
     const { app: a, win } = app();
     const cursor = a.repos.sessions.get(ids.session.cursor)!;

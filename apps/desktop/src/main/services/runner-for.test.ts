@@ -17,6 +17,9 @@ describe('runnerFor', () => {
     // OpenCode's `run --format json` is not Claude's stream-json: without ACP it stays on the TUI.
     ['opencode', { streamJson: true, printMode: true }, 'pty'],
     ['opencode', {}, 'pty'],
+    ['goose', { acp: true }, 'stream'],
+    ['goose', { streamJson: true }, 'pty'],
+    ['goose', {}, 'pty'],
     ['shell', {}, 'pty'],
   ] as const)('%s with %o → %s', (agent, capabilities, runner) => {
     expect(runnerFor(agent, { capabilities })).toBe(runner);

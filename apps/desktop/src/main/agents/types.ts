@@ -76,7 +76,7 @@ export interface AgentLaunch {
 }
 
 /** CLIs with no system-prompt flag: what Claude Code gets in `--append-system-prompt` goes ahead of their first turn. */
-export const PREAMBLE_AGENTS: readonly Agent[] = ['codex', 'gemini', 'cursor', 'opencode'];
+export const PREAMBLE_AGENTS: readonly Agent[] = ['codex', 'gemini', 'cursor', 'opencode', 'goose'];
 
 /**
  * The lines every agent should start with (ADR-0025): the shims, peers, the lane, other lanes and built-in coding guidance —

@@ -27,7 +27,7 @@ test('Settings › Agents lists every agent with its account and opens Connect a
 
     // Rows by agent, not position: adding an agent (OpenCode, #17) must not shift every assertion.
     const rows = page.locator('[data-agent-row]');
-    await expect(rows).toHaveCount(6);
+    await expect(rows).toHaveCount(7);
     const row = (agent: string) => page.locator(`[data-agent-row="${agent}"]`);
     await expect(row('claude')).toContainText('nic@acme.dev');
     await expect(row('claude')).toHaveAttribute('data-agent-state', 'connected');
@@ -36,6 +36,7 @@ test('Settings › Agents lists every agent with its account and opens Connect a
     await expect(row('cursor')).toContainText('nic@acme.dev');
     await expect(row('cursor')).toHaveAttribute('data-agent-state', 'unverified');
     await expect(row('opencode')).toBeVisible();
+    await expect(row('goose')).toBeVisible();
     await expect(row('shell')).toHaveAttribute('data-agent-state', 'shell');
 
     await page.locator('[data-agent-row="gemini"] button', { hasText: 'Connect' }).click();

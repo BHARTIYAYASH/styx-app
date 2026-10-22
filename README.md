@@ -125,7 +125,7 @@ gets the element, the page and a picture of it.
 
 ## Works with
 
-- **Agents:** Claude Code · Codex · Gemini CLI · Cursor · OpenCode · any shell
+- **Agents:** Claude Code · Codex · Gemini CLI · Cursor · OpenCode · Goose · any shell
 - **Targets agents can ask for:** Vercel · Supabase · AWS · Google Cloud · Fly.io · Railway · Render · GitHub · SSH
 - **Platforms:** macOS (Apple Silicon) · Windows 10 and 11 (beta) · Linux, as an AppImage or .deb (beta)
 - **Editors:** the built-in editor and terminal, or open any task in VS Code, Cursor, Zed or JetBrains

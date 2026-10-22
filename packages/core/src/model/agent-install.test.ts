@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { GIT_DOWNLOAD_URL, INSTALL_PLATFORMS, gitInstallRecipes, installRecipes } from './agent-install';
 
-const CONNECTABLE = ['claude', 'codex', 'gemini', 'cursor'] as const;
+const CONNECTABLE = ['claude', 'codex', 'gemini', 'cursor', 'opencode', 'goose'] as const;
 
 describe('installRecipes (#98)', () => {
   it('every connectable agent has a recipe per platform; the shell and an unknown OS have none', () => {
