@@ -129,7 +129,7 @@ describe('detectDeployCommands', () => {
 
   it('supabase: migrations, plus functions when the folder has any, with the project ref from the target', async () => {
     const dbOnly = await detectDeployCommands(
-      { provider: 'supabase', config: { projectRef: 'abcd' } },
+      { provider: 'supabase', config: { ref: 'abcdefghijklmnopqrst' } },
       '/repo',
       {
         cli: new FakeCliRunner(),
@@ -137,7 +137,10 @@ describe('detectDeployCommands', () => {
       },
     );
     expect(dbOnly).toEqual([
-      { command: 'supabase db push --project-ref abcd', source: 'supabase/config.toml' },
+      {
+        command: 'supabase db push --project-ref abcdefghijklmnopqrst',
+        source: 'supabase/config.toml',
+      },
     ]);
     const withFns = await detectDeployCommands({ provider: 'supabase', config: {} }, '/repo', {
       cli: new FakeCliRunner(),
@@ -150,6 +153,22 @@ describe('detectDeployCommands', () => {
         ...fakeFs([]),
       }),
     ).toEqual([]);
+  });
+
+  it('supabase: omits malformed refs and the obsolete projectRef key', async () => {
+    const malformed = await detectDeployCommands(
+      { provider: 'supabase', config: { ref: 'project.ref' } },
+      '/repo',
+      { cli: new FakeCliRunner(), ...fakeFs(['supabase/config.toml']) },
+    );
+    expect(malformed[0]?.command).toBe('supabase db push');
+
+    const obsolete = await detectDeployCommands(
+      { provider: 'supabase', config: { projectRef: 'abcdefghijklmnopqrst' } },
+      '/repo',
+      { cli: new FakeCliRunner(), ...fakeFs(['supabase/config.toml']) },
+    );
+    expect(obsolete[0]?.command).toBe('supabase db push');
   });
 
   it('github: workflows named for deploying, else workflows whose text mentions deploy', async () => {
