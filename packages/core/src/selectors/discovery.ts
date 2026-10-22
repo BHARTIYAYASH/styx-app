@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { copy } from '../copy';
-import type { Agent } from '../model/common';
+import type { Agent, Provider } from '../model/common';
 import { modelInfoSchema, type ModelInfo } from '../model/session';
 import type { ReadModel } from '../read-model';
 import {
@@ -63,6 +63,18 @@ export const CLI_INSTALL_URLS: Readonly<Record<Exclude<CliInstall['agent'], 'she
   gemini: 'https://github.com/google-gemini/gemini-cli#installation',
   cursor: 'https://cursor.com/docs/cli/installation',
   opencode: 'https://opencode.ai/docs',
+};
+
+/** Official install pages for the provider CLIs shown in Connect target. SSH has no CLI step. */
+export const TARGET_CLI_INSTALL_URLS: Readonly<Record<Exclude<Provider, 'ssh'>, string>> = {
+  vercel: 'https://vercel.com/docs/cli',
+  aws: 'https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html',
+  gcp: 'https://docs.cloud.google.com/sdk/docs/install-sdk',
+  supabase: 'https://supabase.com/docs/guides/local-development/cli/getting-started',
+  github: 'https://cli.github.com/',
+  fly: 'https://docs.fly.io/flyctl/install',
+  railway: 'https://docs.railway.com/cli',
+  render: 'https://render.com/docs/cli',
 };
 
 /** `capabilities.source` of a detected CLI, or null for rows written before sources were recorded. */

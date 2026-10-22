@@ -1,4 +1,4 @@
-import { idFrom } from '@styx/core';
+import { idFrom, TARGET_CLI_INSTALL_URLS } from '@styx/core';
 import type { Container } from '../../container';
 import type { CommandBus } from '../bus';
 
@@ -35,6 +35,11 @@ export function registerTargetCommands(bus: CommandBus, app: Container): void {
   }));
 
   bus.register('target.connect.cliStatus', ({ provider }) => targets.cliStatus(provider));
+
+  bus.register('target.connect.installGuide', async ({ provider }) => {
+    await app.openExternal(TARGET_CLI_INSTALL_URLS[provider]);
+    return {};
+  });
 
   bus.register('target.connect.cliLogin', ({ projectId, provider, account }) =>
     targets.cliLogin(projectId, provider, account),

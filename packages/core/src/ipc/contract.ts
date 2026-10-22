@@ -876,6 +876,10 @@ export const commands = {
       ),
     }),
   },
+  'target.connect.installGuide': {
+    input: z.object({ provider: providerSchema.exclude(['ssh']) }),
+    output: ok,
+  },
   /** Runs the CLI's own login flow in a terminal the renderer attaches to over the `pty` channel; `connect.cliLogin` reports exit. */
   'target.connect.cliLogin': {
     input: z.object({ projectId: projectIdSchema, provider: providerSchema, account: z.string().optional() }),
