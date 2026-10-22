@@ -725,8 +725,13 @@ export function ConnectModal({
         <div className={s['cliStatus']} data-cli-installed={installed ? 'true' : 'false'}>
           <span className={s['cliStatusText']}>{cliStatusLine(cli, cliStatus)}</span>
           {cliStatus !== null && !installed ? (
-            // TODO(main): no open-URL command in the contract yet; the guide link stays disabled.
-            <button type="button" className={s['link']} disabled title={copy.connect.cli.installGuide}>
+            <button
+              type="button"
+              className={s['link']}
+              onClick={() => {
+                if (provider !== 'ssh') void command('target.connect.installGuide', { provider });
+              }}
+            >
               {copy.connect.cli.installGuide}
             </button>
           ) : null}

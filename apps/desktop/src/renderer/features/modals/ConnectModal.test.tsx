@@ -202,7 +202,7 @@ describe('ConnectModal', () => {
       });
     });
 
-    it('a missing binary reads "not found on PATH · Install guide" and disables Connect and Sign in', async () => {
+    it('a missing binary offers its install guide and disables Connect and Sign in', async () => {
       cliStatus = {
         installed: false,
         binary: null,
@@ -212,9 +212,10 @@ describe('ConnectModal', () => {
       };
       render(<ConnectModal id="modal-1" projectId={acme} provider="github" />);
       await waitFor(() => expect(screen.getByText('gh · not found on PATH')).toBeTruthy());
-      expect(
-        screen.getByRole('button', { name: copy.connect.cli.installGuide }).hasAttribute('disabled'),
-      ).toBe(true);
+      const installGuide = screen.getByRole('button', { name: copy.connect.cli.installGuide });
+      expect(installGuide.hasAttribute('disabled')).toBe(false);
+      fireEvent.click(installGuide);
+      expect(commandMock).toHaveBeenCalledWith('target.connect.installGuide', { provider: 'github' });
       expect(
         screen.getByText('gh is not installed. Install it, or use Advanced to paste a key.'),
       ).toBeTruthy();
