@@ -1,3 +1,4 @@
+import { ampLaunch } from './amp';
 import { claudeLaunch } from './claude';
 import { codexLaunch } from './codex';
 import { cursorLaunch } from './cursor';
@@ -29,6 +30,8 @@ export function buildAgentLaunch(ctx: AgentLaunchContext): Promise<AgentLaunch> 
       return opencodeLaunch(ctx);
     case 'goose':
       return gooseLaunch(ctx);
+    case 'amp':
+      return ampLaunch(ctx);
     case 'shell':
       return shellLaunch(ctx);
   }

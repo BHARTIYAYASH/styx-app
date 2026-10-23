@@ -700,8 +700,9 @@ describe('<Settings />', () => {
     expect(screen.getByRole('heading', { name: 'Agents' })).toBeTruthy();
     expect(screen.getByText(copy.agentsPage.lead)).toBeTruthy();
     const table = screen.getByRole('table', { name: copy.agentsPage.title });
-    expect(table.querySelectorAll('[data-agent-row]')).toHaveLength(7);
+    expect(table.querySelectorAll('[data-agent-row]')).toHaveLength(8);
     expect(table.querySelector('[data-agent-row="goose"]')).not.toBeNull();
+    expect(table.querySelector('[data-agent-row="amp"]')).not.toBeNull();
     // The account cell carries the full string as its title: "email · plan" (the Codex verifier) is wider than the column.
     const codexAccount = table.querySelector('[data-agent-row="codex"] [data-agent-account]');
     expect(codexAccount?.textContent).toBe('nic@acme.dev · team');

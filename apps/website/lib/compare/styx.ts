@@ -41,7 +41,7 @@ export const STYX_POINTS: Record<StyxPoint, { title: string; text: string }> = {
   },
   agents: {
     title: 'Every agent, side by side',
-    text: 'Claude Code, Codex, Gemini CLI, Cursor’s agent, OpenCode and Goose run next to each other in one board, on the subscriptions you already pay for, so you can pick the right agent per task instead of per tool.',
+    text: 'Claude Code, Codex, Gemini CLI, Cursor’s agent, OpenCode, Goose and Amp run next to each other in one board, on the subscriptions you already pay for, so you can pick the right agent per task instead of per tool.',
   },
 };
 

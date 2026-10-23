@@ -64,6 +64,7 @@ export const CLI_INSTALL_URLS: Readonly<Record<Exclude<CliInstall['agent'], 'she
   cursor: 'https://cursor.com/docs/cli/installation',
   opencode: 'https://opencode.ai/docs',
   goose: 'https://block.github.io/goose/docs/getting-started/installation/',
+  amp: 'https://ampcode.com/docs/cli',
 };
 
 /** Official install pages for the provider CLIs shown in Connect target. SSH has no CLI step. */

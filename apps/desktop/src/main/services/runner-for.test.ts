@@ -20,6 +20,9 @@ describe('runnerFor', () => {
     ['goose', { acp: true }, 'stream'],
     ['goose', { streamJson: true }, 'pty'],
     ['goose', {}, 'pty'],
+    // Amp stream-json has no documented approval round trip: keep all tool decisions in the TUI.
+    ['amp', { streamJson: true, printMode: true, acp: true }, 'pty'],
+    ['amp', {}, 'pty'],
     ['shell', {}, 'pty'],
   ] as const)('%s with %o → %s', (agent, capabilities, runner) => {
     expect(runnerFor(agent, { capabilities })).toBe(runner);

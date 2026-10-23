@@ -14,7 +14,7 @@ import { delimiter, dirname, join } from 'node:path';
 import { fallbackShell } from './pty-service';
 import type { CliCandidate, CliInstall, CliSource } from '@styx/core';
 
-export type AgentKind = 'claude' | 'codex' | 'gemini' | 'cursor' | 'opencode' | 'goose' | 'shell';
+export type AgentKind = 'claude' | 'codex' | 'gemini' | 'cursor' | 'opencode' | 'goose' | 'amp' | 'shell';
 export type AuthState = 'signed-in' | 'signed-out' | 'unknown' | 'n/a';
 export type { CliCandidate, CliSource };
 
@@ -116,6 +116,7 @@ const CLIS: { agent: AgentKind; label: string; bins: string[] }[] = [
   { agent: 'cursor', label: 'Cursor agent', bins: ['cursor-agent', 'agent'] },
   { agent: 'opencode', label: 'OpenCode', bins: ['opencode'] },
   { agent: 'goose', label: 'Goose', bins: ['goose'] },
+  { agent: 'amp', label: 'Amp', bins: ['amp'] },
   { agent: 'shell', label: 'Shell', bins: [] },
 ];
 
@@ -145,6 +146,7 @@ const AGENT_MARKERS: Readonly<Record<Exclude<AgentKind, 'shell'>, RegExp>> = {
   // `opencode --version` prints the bare number (1.18.35), so this only ever matches other output that names it.
   opencode: /opencode/i,
   goose: /goose/i,
+  amp: /\bamp\b/i,
 };
 
 /** Provider keys OpenCode reads from the environment (a subset: the common providers). */
@@ -248,6 +250,7 @@ export function wellKnownBinDirs(
     const local = env['LOCALAPPDATA'] ?? join(home, 'AppData', 'Local');
     return [
       join(home, '.local', 'bin'),
+      join(home, '.amp', 'bin'),
       join(appData, 'npm'),
       join(local, 'Microsoft', 'WinGet', 'Links'),
       join(local, 'pnpm'),
@@ -259,6 +262,7 @@ export function wellKnownBinDirs(
   }
   return [
     join(home, '.local', 'bin'),
+    join(home, '.amp', 'bin'),
     ...system,
     join(home, '.npm-global', 'bin'),
     join(home, '.volta', 'bin'),
@@ -796,7 +800,8 @@ export class DetectService {
           ? 'signed-in'
           : 'unknown';
       case 'goose':
-        // Goose has no offline auth-status command: a configured provider may be local or use its own keyring.
+      case 'amp':
+        // Configuration files cannot establish a verified provider identity.
         return 'unknown';
       case 'opencode':
         // Provider logins sit in `$XDG_DATA_HOME/opencode/auth.json` (default `~/.local/share/opencode`, checked

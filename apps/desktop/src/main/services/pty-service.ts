@@ -58,6 +58,7 @@ export const SHELL_WHICH_NAMES: readonly string[] = [
   'cursor-agent',
   'opencode',
   'goose',
+  'amp',
 ];
 
 const PATH_MARK = '__STYX_PATH__';

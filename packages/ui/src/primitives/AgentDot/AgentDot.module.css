@@ -24,6 +24,9 @@
   .dot[data-agent='goose'] {
     background: var(--agent-goose);
   }
+  .dot[data-agent='amp'] {
+    background: var(--agent-amp);
+  }
   .dot[data-agent='shell'] {
     background: var(--agent-shell);
   }

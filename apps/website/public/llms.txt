@@ -40,3 +40,5 @@ Styx is free and open source (Apache-2.0). It runs on macOS on Apple silicon, an
 - [Privacy policy](https://heystyx.com/privacy)
 - [Terms of service](https://heystyx.com/terms)
 - Contact: hello@heystyx.com
+
+Amp runs in its interactive terminal with explicit per-task approval rules, scoped Styx MCP tools and target-command shims. Native chat/permission cards are unavailable.

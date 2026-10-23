@@ -170,6 +170,7 @@ const AGENT_OPTIONS: readonly RowOption[] = optionsOf(copy.agentProducts, [
   'cursor',
   'opencode',
   'goose',
+  'amp',
   'shell',
 ]);
 

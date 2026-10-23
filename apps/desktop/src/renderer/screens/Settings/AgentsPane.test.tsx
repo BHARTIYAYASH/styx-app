@@ -54,6 +54,7 @@ describe('<AgentsPane />', () => {
       'cursor',
       'opencode',
       'goose',
+      'amp',
       'shell',
     ]);
     expect(rows.map((r) => r.getAttribute('data-agent-state'))).toEqual([
@@ -61,6 +62,7 @@ describe('<AgentsPane />', () => {
       'connected',
       'signed-out',
       'unverified',
+      'missing',
       'missing',
       'missing',
       'shell',

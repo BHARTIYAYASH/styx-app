@@ -133,6 +133,25 @@ describe('AgentService: Goose', () => {
   });
 });
 
+describe('AgentService: Amp', () => {
+  it('keeps verification offline and uses Amp’s own account login', async () => {
+    const t = setup();
+    t.app.repos.discovery.saveCli({ ...row(t.app, 'claude'), agent: 'amp', binary: '/bin/amp', found: true });
+    expect(await t.agents.verify('amp')).toMatchObject({
+      authState: 'unknown',
+      account: null,
+      verifyError: null,
+    });
+    expect(t.exec).not.toHaveBeenCalled();
+    const login = await t.agents.login('amp');
+    expect(login.command).toBe('amp login');
+    expect(t.pty.spawned.at(-1)?.args).toEqual(['login']);
+    await t.agents.installGuide('amp');
+    expect(t.openExternal).toHaveBeenCalledWith('https://ampcode.com/docs/cli');
+    await t.app.shutdown();
+  });
+});
+
 describe('AgentService.verify', () => {
   const cases: {
     name: string;

@@ -24,11 +24,13 @@ vi.mock('../../features/terminal/TerminalPane', () => ({
     worktreeId,
     branch,
     fill,
+    agentTerminal,
   }: {
     sessionId: string | null;
     worktreeId: string;
     branch: string;
     fill?: boolean;
+    agentTerminal?: { id: string; pid: number | null } | null;
   }) => (
     <div
       data-testid="terminal"
@@ -36,6 +38,7 @@ vi.mock('../../features/terminal/TerminalPane', () => ({
       data-worktree={worktreeId}
       data-branch={branch}
       data-fill={fill === true ? 'true' : 'false'}
+      data-agent-terminal={agentTerminal?.id ?? ''}
     />
   ),
 }));
@@ -89,6 +92,24 @@ describe('Workspace screen', () => {
   afterEach(() => {
     cleanup();
     Object.assign(window, { styx: undefined });
+  });
+
+  it('connects only Amp terminal sessions to their existing agent process', () => {
+    const model = fixtures.demoReadModel();
+    const session = model.sessions.byId[claude]!;
+    useReadModel.getState().replaceModel(
+      {
+        ...model,
+        sessions: {
+          ...model.sessions,
+          byId: { ...model.sessions.byId, [claude]: { ...session, agent: 'amp', runner: 'pty', pid: 123 } },
+        },
+      },
+      'connected',
+    );
+    useUiStore.setState({ projectId: acme, projectSession: { [acme]: claude } });
+    render(<Workspace />);
+    expect(screen.getByTestId('terminal').getAttribute('data-agent-terminal')).toBe(claude);
   });
 
   it('a project with no sessions falls back to its main worktree: files listed, editor + terminal bound, branch shown', async () => {

@@ -22,7 +22,7 @@ export async function hook(
     const client = BrokerClient.fromEnv('hook', env);
     await client.connect();
     const a =
-      (['claude', 'codex', 'gemini', 'cursor', 'opencode', 'goose', 'shell'] as const).find(
+      (['claude', 'codex', 'gemini', 'cursor', 'opencode', 'goose', 'amp', 'shell'] as const).find(
         (x) => x === agent,
       ) ?? 'shell';
     await client.call('hook', { agent: a, event, payload }, { timeoutMs: 5000 });

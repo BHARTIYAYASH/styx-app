@@ -15,9 +15,10 @@ export const Gemini: Story = { args: { agent: 'gemini' } };
 export const Cursor: Story = { args: { agent: 'cursor' } };
 export const OpenCode: Story = { args: { agent: 'opencode' } };
 export const Goose: Story = { args: { agent: 'goose' } };
+export const Amp: Story = { args: { agent: 'amp' } };
 export const Shell: Story = { args: { agent: 'shell' } };
 
-const ALL: AgentKind[] = ['claude', 'codex', 'gemini', 'cursor', 'opencode', 'goose', 'shell'];
+const ALL: AgentKind[] = ['claude', 'codex', 'gemini', 'cursor', 'opencode', 'goose', 'amp', 'shell'];
 const NAME: Record<AgentKind, string> = {
   claude: 'Claude',
   codex: 'Codex',
@@ -25,6 +26,7 @@ const NAME: Record<AgentKind, string> = {
   cursor: 'Cursor',
   opencode: 'OpenCode',
   goose: 'Goose',
+  amp: 'Amp',
   shell: 'Shell',
 };
 

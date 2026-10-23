@@ -64,10 +64,11 @@ const LOGIN_ARGS: Record<ConnectableAgent, string[]> = {
   gemini: [],
   opencode: ['auth', 'login'],
   goose: ['configure'],
+  amp: ['login'],
 };
 
 /** Who the CLI says it is signed in as. Gemini has no status command (see `probeGemini`). */
-const STATUS_ARGS: Record<Exclude<ConnectableAgent, 'gemini' | 'goose'>, string[]> = {
+const STATUS_ARGS: Record<Exclude<ConnectableAgent, 'gemini' | 'goose' | 'amp'>, string[]> = {
   claude: ['auth', 'status', '--json'],
   codex: ['login', 'status'],
   cursor: ['status'],
@@ -81,6 +82,7 @@ const INSTALL_GUIDES: Record<ConnectableAgent, string> = {
   cursor: 'https://cursor.com/docs/cli',
   opencode: 'https://opencode.ai/docs',
   goose: 'https://block.github.io/goose/docs/getting-started/installation/',
+  amp: 'https://ampcode.com/docs/cli',
 };
 
 /**
@@ -341,6 +343,8 @@ export class AgentService {
     // `goose info --check` spends a model turn; `--verbose` can print configuration. Neither is a safe auth probe.
     // Keep credentials with Goose and let the session report provider errors rather than claiming a verified login.
     if (agent === 'goose') return { authState: 'unknown', account: null };
+    // Do not start a model turn to verify Amp. Its account tools remain available in its own terminal.
+    if (agent === 'amp') return { authState: 'unknown', account: null };
     if (agent === 'codex' && capabilities['appServer'] === true) {
       // ADR-0016: the app-server names the account (email · plan) and the models; an older build without one
       // (probe → null) is asked the old way below.

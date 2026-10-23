@@ -8,6 +8,7 @@ const agents = [
   ['Cursor', 'Same chat, same approvals.'],
   ['OpenCode', 'Same chat, same approvals, with any provider it supports.'],
   ['Goose', 'Native chat and approvals over ACP, using your configured provider.'],
+  ['Amp', 'Its interactive terminal, with approvals there and scoped Styx tools.'],
   ['Your terminal', 'A plain shell, with the same rules about what it can reach.'],
 ] as const;
 

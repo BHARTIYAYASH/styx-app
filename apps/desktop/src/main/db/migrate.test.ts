@@ -76,6 +76,7 @@ describe('migrations', () => {
       '0022_opencode_agent',
       '0023_fly_railway_render',
       '0024_goose_agent',
+      '0025_amp_agent',
     ]);
     // Seed at 0001: a project, two targets and an active grant that cascades on the target.
     migrate(db, all.slice(0, 2));
@@ -178,8 +179,9 @@ describe('migrations', () => {
         '0022_opencode_agent',
         '0023_fly_railway_render',
         '0024_goose_agent',
+        '0025_amp_agent',
       ],
-      version: 25,
+      version: 26,
     });
     expect(db.pragma('foreign_key_check')).toEqual([]);
     expect(db.prepare('SELECT id, project_id, default_branch, remotes_json FROM repos').all()).toEqual([
@@ -263,6 +265,51 @@ describe('migrations', () => {
     expect(db.prepare('SELECT count(*) AS n FROM sessions').get()).toEqual({ n: 0 });
   });
 
+  it('0025 adds Amp without losing session columns, CLI records or referencing rows', () => {
+    const db = new Database(':memory:');
+    const all = listMigrations();
+    migrate(db, all.slice(0, 25));
+    db.exec(`
+      INSERT INTO projects (id, name, path, initials, created_at, last_activity_at) VALUES ('p', 'x', '/x', 'X', 0, 0);
+      INSERT INTO sessions (id, project_id, agent, runner, state, started_at, last_activity_at, permission_mode, cli_session_id, tokens_used, context_window, kind, design_session_id)
+        VALUES ('s', 'p', 'opencode', 'stream', 'idle', 1, 2, 'plan', 'prior', 42, 1000, 'build', 'design');
+      INSERT INTO cli_installs (agent, binary, found, checked_at, account, capabilities_json)
+        VALUES ('opencode', '/bin/opencode', 1, 3, 'Provider', '{"acp":true}');
+      INSERT INTO sessions (id, project_id, agent, state, started_at, last_activity_at)
+        VALUES ('goose', 'p', 'goose', 'idle', 0, 0);
+      INSERT INTO cli_installs (agent, binary, checked_at) VALUES ('goose', '/bin/goose', 0);
+      INSERT INTO transcript_messages (id, session_id, seq, kind, body, created_at)
+        VALUES ('m', 's', 0, 'user', 'keep this conversation', 4);
+    `);
+    const beforeSession = db.prepare('SELECT * FROM sessions').all();
+    const beforeCli = db.prepare('SELECT * FROM cli_installs').all();
+    const beforeTranscript = db.prepare('SELECT * FROM transcript_messages').all();
+    const insertCli = db.prepare('INSERT INTO cli_installs (agent, checked_at) VALUES (?, 0)');
+    expect(() => insertCli.run('amp')).toThrow(/CHECK/);
+    expect(migrate(db)).toEqual({ applied: ['0025_amp_agent'], version: 26 });
+    expect(db.prepare('SELECT * FROM sessions').all()).toEqual(beforeSession);
+    expect(db.prepare('SELECT * FROM cli_installs').all()).toEqual(beforeCli);
+    expect(db.prepare('SELECT * FROM transcript_messages').all()).toEqual(beforeTranscript);
+    expect(db.pragma('foreign_key_check')).toEqual([]);
+    expect(db.pragma('foreign_keys', { simple: true })).toBe(1);
+    expect(() => insertCli.run('amp')).not.toThrow();
+    expect(() => insertCli.run('unknown-agent')).toThrow(/CHECK/);
+    db.exec(
+      "INSERT INTO sessions (id, project_id, agent, state, started_at, last_activity_at) VALUES ('g', 'p', 'amp', 'idle', 0, 0)",
+    );
+    expect(
+      db
+        .prepare(
+          "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'sessions' AND sql IS NOT NULL ORDER BY name",
+        )
+        .all(),
+    ).toEqual([{ name: 'sessions_archive' }, { name: 'sessions_project_state' }]);
+    db.exec("DELETE FROM projects WHERE id = 'p'");
+    expect(db.prepare('SELECT count(*) AS n FROM sessions').get()).toEqual({ n: 0 });
+    expect(db.prepare('SELECT count(*) AS n FROM transcript_messages').get()).toEqual({ n: 0 });
+    db.close();
+  });
+
   it('0024 adds Goose without losing session columns, CLI records or referencing rows', () => {
     const db = new Database(':memory:');
     const all = listMigrations();
@@ -281,7 +328,7 @@ describe('migrations', () => {
     const beforeTranscript = db.prepare('SELECT * FROM transcript_messages').all();
     const insertCli = db.prepare('INSERT INTO cli_installs (agent, checked_at) VALUES (?, 0)');
     expect(() => insertCli.run('goose')).toThrow(/CHECK/);
-    expect(migrate(db)).toEqual({ applied: ['0024_goose_agent'], version: 25 });
+    expect(migrate(db, all.slice(0, 25))).toEqual({ applied: ['0024_goose_agent'], version: 25 });
     expect(db.prepare('SELECT * FROM sessions').all()).toEqual(beforeSession);
     expect(db.prepare('SELECT * FROM cli_installs').all()).toEqual(beforeCli);
     expect(db.prepare('SELECT * FROM transcript_messages').all()).toEqual(beforeTranscript);

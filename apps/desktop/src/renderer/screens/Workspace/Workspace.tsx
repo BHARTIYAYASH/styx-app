@@ -106,6 +106,7 @@ export function Workspace() {
 
   // The lane on screen: the one picked in the nav, finished or not (ADR-0027 §1); else the first live one.
   const activeSessionId = projectId === null ? null : activeLaneOf(model, projectId, sessionId);
+  const activeSession = activeSessionId === null ? null : (model.sessions.byId[activeSessionId] ?? null);
   const worktree = projectId === null ? null : editorWorktree(model, projectId, activeSessionId);
   const worktreeId = worktree?.id ?? null;
   // Tracking off (the default): no bands, no hunk bar — main sends no hunks either, but a stale row must not show.
@@ -365,6 +366,11 @@ export function Workspace() {
         {/* Before the first spawn the terminal belongs to the worktree itself (a shell in the project folder). */}
         <TerminalPane
           sessionId={activeSessionId}
+          agentTerminal={
+            activeSession?.agent === 'amp' && activeSession.runner === 'pty'
+              ? { id: activeSession.id, pid: activeSession.pid }
+              : null
+          }
           worktreeId={worktreeId}
           branch={branchLabel}
           screenReader={screenReader}
