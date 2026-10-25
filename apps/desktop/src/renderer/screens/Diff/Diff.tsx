@@ -154,7 +154,6 @@ function HunkReview() {
     if (sessionId !== null) void command('hunk.revertAll', { sessionId });
   };
 
-  // Tracking off (Settings › Editor): nothing is watched, so there is nothing to review; point at the switch.
   if (!model.settings.app.trackAgentEdits) {
     return (
       <div
@@ -178,11 +177,7 @@ function HunkReview() {
           actions={
             <Button
               variant="primary"
-              onClick={() => {
-                const ui = useUiStore.getState();
-                ui.setSettingsSection('app:editor');
-                ui.setScreen('settings');
-              }}
+              onClick={() => void command('settings.set', { patch: { trackAgentEdits: true } })}
             >
               {copy.diff.off.cta}
             </Button>
