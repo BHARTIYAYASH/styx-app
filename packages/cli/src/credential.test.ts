@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { mkdtempSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { Readable } from 'node:stream';
@@ -24,10 +25,11 @@ describe('Git credential helper', () => {
   it.each(['fetch', 'push', undefined])(
     'obtains a broker credential with operation %s',
     async (operation) => {
+      const dir = mkdtempSync(join(tmpdir(), 'styx-credential-'));
       const endpoint =
         process.platform === 'win32'
           ? `\\\\.\\pipe\\styx-credential-${randomUUID()}`
-          : join(tmpdir(), `styx-${randomUUID()}.sock`);
+          : join(dir, 'broker.sock');
       const server = new BrokerServer({
         authenticate: async () => ({
           sessionId: 's',
@@ -64,6 +66,7 @@ describe('Git credential helper', () => {
         expect(test.errors).toEqual([]);
       } finally {
         await server.close();
+        rmSync(dir, { recursive: true, force: true });
       }
     },
   );
