@@ -105,7 +105,7 @@ export const projectWorktreeOf = (
   // A finished lane picked from the nav (ADR-0027 §1) is still the one on screen.
   const active = activeSessionId === null ? undefined : all.find((s) => s.id === activeSessionId);
   const pick = active ?? live[0];
-  if (pick !== undefined) return worktreeOf(model, pick) ?? null;
+  if (pick !== undefined) return worktreeOf(model, pick);
   return mainWorktreeOf(model, projectId);
 };
 

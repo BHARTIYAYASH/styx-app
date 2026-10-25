@@ -67,27 +67,26 @@ export const activeLanes = (
   projectId: ProjectId,
   except: WorktreeId | null = null,
 ): ActiveLane[] => {
-  const out: ActiveLane[] = [];
+  const out: { lane: ActiveLane; startedAt: number }[] = [];
   for (const s of rows(model.sessions)) {
     if (s.projectId !== projectId || s.archivedAt !== null || s.state === 'done' || s.purpose) continue;
     const w = model.worktrees.byId[s.worktreeId];
     if (w === undefined || w.isMain || w.archivedAt !== null || w.branch === null || w.id === except)
       continue;
     out.push({
-      sessionId: s.id,
-      worktreeId: w.id,
-      agent: AGENT_LABEL[s.agent],
-      branch: w.branch,
-      task: taskOf(s),
-      files: w.changes.files,
-      state: s.state,
+      startedAt: s.startedAt,
+      lane: {
+        sessionId: s.id,
+        worktreeId: w.id,
+        agent: AGENT_LABEL[s.agent],
+        branch: w.branch,
+        task: taskOf(s),
+        files: w.changes.files,
+        state: s.state,
+      },
     });
   }
-  return out.sort((a, b) => {
-    const sa = model.sessions.byId[a.sessionId]?.startedAt ?? 0;
-    const sb = model.sessions.byId[b.sessionId]?.startedAt ?? 0;
-    return sa - sb;
-  });
+  return out.sort((a, b) => a.startedAt - b.startedAt).map((x) => x.lane);
 };
 
 /** Whose move a lane is, for the project nav (ADR-0027 §1), in the order the nav lists them. */
@@ -112,20 +111,24 @@ export interface NavLane {
   statusLabel: string;
 }
 
-const navStatusOf = (model: ReadModel, s: Session, w: Worktree | undefined): NavLaneStatus => {
+type NavState = { status: Exclude<NavLaneStatus, 'landed'> } | { status: 'landed'; mergedAt: number };
+
+const navStatusOf = (model: ReadModel, s: Session, w: Worktree | undefined): NavState => {
   switch (s.state) {
     case 'needs-you':
-      return 'your-turn';
+      return { status: 'your-turn' };
     case 'working':
-      return 'working';
+      return { status: 'working' };
     case 'idle':
-      return 'idle';
+      return { status: 'idle' };
     case 'paused':
-      return 'paused';
+      return { status: 'paused' };
     case 'done':
       // One rule with Home's counter and the board (`isReadyToLand`); a lane with nothing to land is finished.
-      if (isReadyToLand(model, s)) return 'ready';
-      return w !== undefined && w.mergedAt !== null ? 'landed' : 'finished';
+      if (isReadyToLand(model, s)) return { status: 'ready' };
+      return w !== undefined && w.mergedAt !== null
+        ? { status: 'landed', mergedAt: w.mergedAt }
+        : { status: 'finished' };
   }
 };
 
@@ -139,11 +142,12 @@ export const navLanes = (model: ReadModel, projectId: ProjectId, now: number): N
   for (const s of rows(model.sessions)) {
     if (s.projectId !== projectId || s.archivedAt !== null || s.purpose) continue;
     const w = model.worktrees.byId[s.worktreeId];
-    const status = navStatusOf(model, s, w);
+    const state = navStatusOf(model, s, w);
+    const status = state.status;
     const task = taskOf(s);
     const at = s.lastActivityAt ?? s.startedAt;
     // Landed counts from the merge, finished from the session's end, everything else from its last activity.
-    const since = status === 'landed' ? (w?.mergedAt ?? at) : status === 'finished' ? (s.endedAt ?? at) : at;
+    const since = state.status === 'landed' ? state.mergedAt : status === 'finished' ? (s.endedAt ?? at) : at;
     const age = formatAge(since, now);
     out.push({
       lane: {
@@ -220,7 +224,7 @@ export const DEFAULT_HOTSPOTS: readonly string[] = [
 export const globToRegExp = (glob: string): RegExp => {
   let out = '^';
   for (let i = 0; i < glob.length; i++) {
-    const c = glob[i];
+    const c = glob.charAt(i);
     if (c === '*') {
       if (glob[i + 1] === '*') {
         // `**/` spans zero or more directories; a trailing `**` spans the rest.
@@ -233,7 +237,7 @@ export const globToRegExp = (glob: string): RegExp => {
         }
       } else out += '[^/]*';
     } else if (c === '?') out += '[^/]';
-    else if (c !== undefined) out += c.replace(/[.+^${}()|[\]\\]/g, '\\$&');
+    else out += c.replace(/[.+^${}()|[\]\\]/g, '\\$&');
   }
   return new RegExp(`${out}$`);
 };
@@ -247,7 +251,7 @@ export const isHotspot = (file: string, hotspots: readonly string[]): boolean =>
 
 /** `agent/<name>-<n>` (spec §4.11): prefix from project settings, n = first free counter among existing branches. */
 export const autoBranch = (agent: Agent, prefix: string, existingBranches: readonly string[]): string => {
-  const name = copy.agentProducts[agent].toLowerCase().split(' ')[0] ?? agent;
+  const name = copy.agentProducts[agent].toLowerCase().split(' ')[0];
   const taken = new Set<number>();
   const re = new RegExp(`^${prefix.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&')}${name}-(\\d+)$`);
   for (const b of existingBranches) {

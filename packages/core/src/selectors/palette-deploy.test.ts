@@ -4,7 +4,7 @@ import { demoReadModel, ids } from '../fixtures/demo';
 import type { Env } from '../model/common';
 import type { Target } from '../model/target';
 import { rows, tableFrom, type ReadModel } from '../read-model';
-import { builtInDeployCommand, deployTargetLabel, deployTargetOptions } from './palette';
+import { builtInDeployCommand, deployCommandOf, deployTargetLabel, deployTargetOptions } from './palette';
 
 const base = demoReadModel();
 const project = ids.project.acmeShop;
@@ -30,6 +30,14 @@ const withTargets = (targets: Target[]): ReadModel => ({
 describe('deployTargetLabel', () => {
   it('names a target the way the palette deploy rows do', () => {
     expect(deployTargetLabel({ name: 'Vercel', env: 'prod' })).toBe('Vercel prod');
+  });
+});
+
+describe('custom deploy command', () => {
+  it('uses a nonblank configured command after trimming surrounding space', () => {
+    expect(deployCommandOf({ config: { deployCommand: '  npm run deploy  ' } })).toBe('npm run deploy');
+    expect(deployCommandOf({ config: { deployCommand: '   ' } })).toBeNull();
+    expect(deployCommandOf({ config: { deployCommand: 42 } })).toBeNull();
   });
 });
 

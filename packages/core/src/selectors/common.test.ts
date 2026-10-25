@@ -3,7 +3,7 @@ import { demoReadModel, ids, DEMO_NOW } from '../fixtures/demo';
 import { idFrom } from '../ids';
 import type { Session } from '../model/session';
 import { tableFrom, rows } from '../read-model';
-import { inLiveProject, liveSessions, sessionsInProject } from './common';
+import { inLiveProject, liveSessions, projectWorktreeOf, sessionsInProject } from './common';
 import { backgroundTasks } from './tasks';
 
 describe('a removed project keeps its threads out of sight', () => {
@@ -43,5 +43,13 @@ describe('a removed project keeps its threads out of sight', () => {
     if (!base) throw new Error('fixture');
     const task: Session = { ...base, purpose: 'debt-audit' };
     expect(backgroundTasks({ ...removed, sessions: tableFrom([task]) })).toEqual([]);
+  });
+
+  it('has no workspace when the selected session refers to a deleted worktree', () => {
+    const model = demoReadModel();
+    const session = model.sessions.byId[ids.session.claude];
+    if (session === undefined) throw new Error('fixture');
+    const missing = { ...model, sessions: tableFrom([{ ...session, worktreeId: idFrom<'WorktreeId'>('wt_missing') }]) };
+    expect(projectWorktreeOf(missing, ids.project.acmeShop, session.id)).toBeNull();
   });
 });
