@@ -1682,11 +1682,10 @@ Reply in chat. Don't write a file, open a PR, or produce a plan document. Use ex
       nextPrev: 'j / k next · prev',
       done: '{mod}⏎ done',
     },
-    /** Diff review when tracking is off (Settings › Editor › Track agent edits). */
     off: {
       headline: 'Agent edit tracking is off',
-      body: 'Styx is not watching agent worktrees, so there are no hunks in the editor and nothing to review here. Turn it on in Settings › Editor.',
-      cta: 'Open Settings',
+      body: 'Styx is not watching agent worktrees, so there are no hunks to review. Tracking can slow down large changes.',
+      cta: 'Turn on tracking',
     },
     hunkBar: '{n} hunks from {agent} · {note}',
     hunkLabel: '{agent} · {age}',

@@ -171,7 +171,7 @@ describe('Diff review screen', () => {
     expect(useUiStore.getState().diffFocusIndex).toBe(2);
   });
 
-  it('tracking off: the empty state points at Settings › Editor, and Open Settings goes there', () => {
+  it('tracking off: the empty state enables tracking without leaving review', async () => {
     const m = fixtures.demoReadModel();
     useReadModel
       .getState()
@@ -184,8 +184,10 @@ describe('Diff review screen', () => {
     expect(screen.getByText(copy.diff.off.headline)).toBeTruthy();
     expect(screen.queryByRole('list', { name: copy.diff.title })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: copy.diff.off.cta }));
-    expect(useUiStore.getState().screen).toBe('settings');
-    expect(useUiStore.getState().settingsSection).toBe('app:editor');
+    await waitFor(() =>
+      expect(commandMock).toHaveBeenCalledWith('settings.set', { patch: { trackAgentEdits: true } }),
+    );
+    expect(useUiStore.getState().screen).toBe('diff');
   });
 
   it('a plain folder (no git) shows the empty state with `Initialise git` → project.gitInit; Done returns to Workspace', () => {
