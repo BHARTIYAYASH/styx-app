@@ -386,6 +386,18 @@ describe('paletteResults', () => {
     const shown = finished(model, 'reopen').find((i) => i.id === `finished:${first.id}`);
     expect(shown?.action).toEqual({ kind: 'open-session', sessionId: first.id });
     expect(shown?.meta.startsWith('finished · ')).toBe(true);
+    const noEnd = { ...first, endedAt: null, startedAt: NOW - 60_000, firstMessage: 'Recovered chat' };
+    const m3 = {
+      ...model,
+      sessions: tableFrom([noEnd, ...rows(model.sessions).filter((s) => s.id !== first.id)]),
+    };
+    const recovered = finished(m3, 'recovered').find((i) => i.id === `finished:${first.id}`);
+    expect(recovered?.meta).toBe('finished · 1m');
+    const m4 = {
+      ...model,
+      sessions: tableFrom([...rows(model.sessions).filter((s) => s.id !== first.id), noEnd]),
+    };
+    expect(finished(m4, 'recovered').find((i) => i.id === `finished:${first.id}`)?.meta).toBe('finished · 1m');
   });
 
   it('scope filtering (⇥) and scope cycling', () => {

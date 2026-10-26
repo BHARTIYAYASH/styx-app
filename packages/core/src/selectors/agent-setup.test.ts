@@ -6,6 +6,7 @@ import {
   agentCard,
   agentCards,
   agentSetupFoot,
+  agentSetupName,
   isAgentReady,
   readyAgents,
   startingAgent,
@@ -164,6 +165,23 @@ describe('agent setup cards (design/next/styx-next-agent-setup.html)', () => {
     expect(startingAgent(base(), 'shell')).toBe('claude');
     const nobody = { ...base(), discovery: { ...base().discovery, clis: [] } };
     expect(startingAgent(nobody, 'codex')).toBe('codex');
+  });
+
+  it('names card agents by plan and other agents by their own product', () => {
+    expect(agentSetupName('codex')).toBe('ChatGPT');
+    expect(agentSetupName('opencode')).toBe('OpenCode');
+    expect(isAgentReady(base(), 'opencode')).toBe(false);
+  });
+
+  it('shows the installed version from detection when setup did not record it', () => {
+    const m = base();
+    const stale = { ...m, discovery: { ...m.discovery, clis: m.discovery.clis.map((c) =>
+      c.agent === 'claude' ? { ...c, found: false } : c,
+    ) } };
+    const card = agentCard(withRun(stale, run('claude', { step: 'signin', installMs: 1_500 })), 'claude');
+    expect(card.checks[0]?.meta).toBe('2.4.1 · 1.5s');
+    const missing = agentCard(withRun(base(), run('codex', { step: 'signin', installMs: 1_500 })), 'codex');
+    expect(missing.checks[0]?.meta).toBe(' · 1.5s');
   });
 
   it('the line under the cards: ready, still going, or a nudge', () => {

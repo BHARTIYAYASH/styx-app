@@ -25,6 +25,7 @@ jobs:
       - run: pnpm lint
       # One retry for a flaky unit test; vitest marks it in the log ("retry x1").
       - run: pnpm test --retry=1
+      - run: pnpm -F @styx/core exec vitest run --coverage
       - run: pnpm build
       - name: Playwright browsers (Storybook axe + prototype baker)
         run: npx playwright install --with-deps chromium
