@@ -5,7 +5,12 @@ import {
   cliAuthLabel,
   cliConnectionLabel,
   cliConnectionState,
+  cliAlternatives,
+  cliCandidateLabel,
+  cliIsManual,
+  cliLocationLabel,
   cliSearchedDirs,
+  cliSourceOf,
   cliVersionLabel,
   ideImportsLabel,
   ideVersionLabel,
@@ -155,5 +160,33 @@ describe('cliSearchedDirs (#98)', () => {
       }),
     ).toEqual(['/Users/nic/.local/bin', '/opt/homebrew/bin']);
     expect(cliSearchedDirs({ capabilities: { searched: 'nope' } })).toEqual([]);
+  });
+});
+
+describe('detected CLI sources and alternatives', () => {
+  it('labels a selected binary and its source, including older detections with no source', () => {
+    const cli = { agent: 'claude' as const, found: true, version: '2.4.1', binary: '/usr/bin/claude', capabilities: { source: 'path' } };
+    expect(cliSourceOf(cli)).toBe('path');
+    expect(cliIsManual(cli)).toBe(false);
+    expect(cliLocationLabel(cli)).toContain('claude 2.4.1 · ');
+    expect(cliIsManual({ capabilities: { source: 'manual' } })).toBe(true);
+    expect(cliSourceOf({ capabilities: { source: 'old-value' } })).toBeNull();
+    expect(cliLocationLabel({ ...cli, capabilities: {} })).toBe('claude 2.4.1');
+    expect(cliLocationLabel({ ...cli, found: false })).toBe('not found on PATH');
+  });
+
+  it('reads valid binary choices and labels both known and missing binary details', () => {
+    const withChoices = { capabilities: { alternatives: [
+      { binary: 'C:\\Tools\\claude.exe', version: '2.4.1', source: 'manual' },
+      { binary: '/', version: null, source: 'path' },
+    ] } };
+    const choices = cliAlternatives(withChoices);
+    expect(choices).toHaveLength(2);
+    const [first, second] = choices;
+    if (first === undefined || second === undefined) throw new Error('fixture');
+    expect(cliCandidateLabel('claude', first)).toContain('claude.exe 2.4.1 · ');
+    expect(cliCandidateLabel('claude', second)).toContain('claude · ');
+    expect(cliAlternatives({ capabilities: {} })).toEqual([]);
+    expect(cliAlternatives({ capabilities: { alternatives: [{ binary: 4 }] } })).toEqual([]);
   });
 });

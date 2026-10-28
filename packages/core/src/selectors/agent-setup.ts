@@ -63,8 +63,9 @@ export const readyAgents = (model: ReadModel): SetupAgent[] =>
  */
 export const startingAgent = <A extends string>(model: ReadModel, preferred: A): A | SetupAgent => {
   const ready = readyAgents(model);
-  if (ready.some((a) => a === preferred) || ready.length === 0) return preferred;
-  return ready[0] ?? preferred;
+  const first = ready[0];
+  if (first === undefined || ready.some((a) => a === preferred)) return preferred;
+  return first;
 };
 
 const PROBLEM_ACTION: Record<SetupProblem, AgentCardAction> = {
@@ -110,11 +111,11 @@ const runChecks = (agent: SetupAgent, setup: AgentSetup, cli: CliInstall | null)
   const out: AgentCardCheck[] = [];
   for (const step of SETUP_STEPS) {
     const i = SETUP_STEPS.indexOf(step);
-    if (step === 'prepare' && setup.preparing === null) continue;
     const state: AgentCardCheck['state'] = i < at ? 'done' : i === at ? 'now' : 'todo';
     switch (step) {
       case 'prepare':
-        out.push({ key: step, state, text: fill(c.prepare, { what: setup.preparing ?? '' }), meta: null });
+        if (setup.preparing !== null)
+          out.push({ key: step, state, text: fill(c.prepare, { what: setup.preparing }), meta: null });
         break;
       case 'install':
         if (setup.installedVersion === null && cli?.found === true && state === 'done') {

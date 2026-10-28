@@ -5,6 +5,19 @@ import { tableFrom } from '../read-model';
 import { activeTask, backgroundTasks, taskKey, taskTitle } from './tasks';
 
 describe('background task selection', () => {
+  it('names each background task and keeps merge work separate by lane', () => {
+    const model = demoReadModel();
+    const base = model.sessions.byId[ids.session.claude];
+    if (base === undefined) throw new Error('fixture');
+    expect(taskKey({ ...base, purpose: 'debt-audit' })).toBe(`audit:${base.projectId}`);
+    expect(taskKey({ ...base, purpose: 'merge' })).toBe(`merge:${base.worktreeId}`);
+    expect(taskKey({ ...base, purpose: 'learn-deploy', taskTargetId: undefined })).toBe(`deploy:${base.id}`);
+    expect(taskTitle('learn-run')).toBe('Run locally');
+    expect(taskTitle('learn-deploy')).toBe('Deploy');
+    expect(taskTitle('merge')).toBe('Bringing in the base branch');
+    expect(taskTitle('debt-audit')).toBe('Tech debt audit');
+  });
+
   it('separates jobs by project and deploy target, retaining only unarchived tasks', () => {
     const model = demoReadModel();
     const base = model.sessions.byId[ids.session.claude];

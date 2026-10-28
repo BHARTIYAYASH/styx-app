@@ -8,10 +8,12 @@ import {
   TASK_MAX,
   activeLanes,
   activeLanesLabel,
+  autoBranch,
   globToRegExp,
   isHotspot,
   laneLine,
   laneOverlapSummary,
+  landLabelOf,
   navLanes,
   navLanesLabel,
   taskOf,
@@ -95,6 +97,7 @@ describe('hotspots', () => {
     expect(globToRegExp('src/**').test('src/deep/er/x.ts')).toBe(true);
     expect(globToRegExp('a?.ts').test('ab.ts')).toBe(true);
     expect(globToRegExp('a.ts').test('aXts')).toBe(false);
+    expect(globToRegExp('src/[draft].ts').test('src/[draft].ts')).toBe(true);
   });
 
   it('isHotspot uses the defaults when the project lists none, and the project list otherwise', () => {
@@ -105,6 +108,27 @@ describe('hotspots', () => {
     expect(isHotspot('packages/core/src/selectors/lanes.ts', [])).toBe(false);
     expect(isHotspot('packages/core/src/copy.ts', ['src/routes/**'])).toBe(false);
     expect(isHotspot('src\\routes\\index.ts', ['src/routes/**'])).toBe(true);
+  });
+});
+
+describe('lane names and landing', () => {
+  it('offers the right action only for a branch that can be landed', () => {
+    const w = { branch: 'feat/search', isMain: false, conflict: null, mergedAt: null, resolution: null };
+    expect(landLabelOf(w, 'auto', 'main')).toBe('Land');
+    expect(landLabelOf(w, 'review', 'develop')).toBe('Merge into develop');
+    expect(landLabelOf({ ...w, isMain: true }, 'auto', 'main')).toBeNull();
+    expect(landLabelOf({ ...w, branch: null }, 'auto', 'main')).toBeNull();
+    expect(landLabelOf({ ...w, conflict: { file: 'src/a.ts', against: 'main' } }, 'auto', 'main')).toBeNull();
+    expect(landLabelOf({ ...w, mergedAt: DEMO_NOW }, 'auto', 'main')).toBeNull();
+    const resolution = { state: 'resolving' as const, sessionId: null, files: [], preHead: 'abc', preTree: null, mergeCommit: null, attempts: 1, startedAt: DEMO_NOW, finishedAt: null, failure: null };
+    expect(landLabelOf({ ...w, resolution }, 'auto', 'main')).toBeNull();
+    expect(landLabelOf({ ...w, resolution: { ...resolution, state: 'checking' } }, 'auto', 'main')).toBeNull();
+  });
+
+  it('selects the first free agent branch number and treats prefix punctuation literally', () => {
+    expect(autoBranch('claude', 'agent/', [])).toBe('agent/claude-1');
+    expect(autoBranch('claude', 'fix.v1/', ['fix.v1/claude-1', 'fix.v1/claude-3'])).toBe('fix.v1/claude-2');
+    expect(autoBranch('claude', 'fix.v1/', ['fixXv1/claude-1', 'fix.v1/codex-1'])).toBe('fix.v1/claude-1');
   });
 });
 
@@ -201,5 +225,10 @@ describe('navLanes (ADR-0027 §1)', () => {
     const lane = navLanes(m, ids.project.acmeShop, DEMO_NOW).find((l) => l.sessionId === ids.session.claude);
     expect(lane?.status).toBe('finished');
     expect(lane?.statusLabel).toBe('Finished 5m ago');
+    const legacy = withSessions({
+      [ids.session.claude]: { ...done, worktreeId: 'wt_missing' as Worktree['id'], endedAt: null, lastActivityAt: DEMO_NOW - MIN },
+    });
+    const oldLane = navLanes(legacy, ids.project.acmeShop, DEMO_NOW).find((l) => l.sessionId === ids.session.claude);
+    expect(oldLane?.statusLabel).toBe('Finished 1m ago');
   });
 });
